@@ -1,8 +1,13 @@
 import React from 'react'
+import { Text, View } from 'react-native'
 
 function HomeScreen() {
   return (
-    <div>HomeScreen</div>
+    <View>
+      <Text>
+        Home Screen
+      </Text>
+    </View>
   )
 }
 

@@ -37,6 +37,16 @@ const LoginScreen: React.FC = () => {
     }, [])
   );
 
+  const handleLogin = () => {
+    try {
+      navigation.navigate("Main", {
+        screen: "Home"
+      });
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    }
+  }
+
   return (
     <SafeAreaView>
       <View style={{ padding: Spacing * 2 }}>
@@ -65,6 +75,7 @@ const LoginScreen: React.FC = () => {
         <TouchableOpacity
           style={styles.signInButton}
           disabled={loading}
+          onPress={handleLogin}
         >
           {loading ? (
             <ActivityIndicator size="small" color="#fff" />
