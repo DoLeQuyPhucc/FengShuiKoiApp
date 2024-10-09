@@ -10,9 +10,15 @@ const black = "#000";
 const dark = "#626262";
 const blue = "#1F41BB";
 const gray = "#ECECEC";
+
+
 const lightBlue = "#f1f4ff";
-const warmOrange = "#FFA07A";
 const commonBlue = "#47CEFF";
+const warmOrange = "#f39c12";
+const darkBlueText = "#133048";
+const lightGreen = "#1ABC9C";
+
+
 
 export const Colors = {
   light: {
@@ -45,4 +51,6 @@ export default {
   gray: gray,
   warmOrange: warmOrange,
   commonBlue: commonBlue,
+  darkBlueText: darkBlueText,
+  lightGreen: lightGreen,
 };
