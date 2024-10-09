@@ -25,7 +25,7 @@ const tabBarProps: TabBarProps[] = [
     tabBarLabel: 'Home',
     tabBarIconProps: {
       iconType: Ionicons,
-      iconName: 'home-outline',
+      iconName: 'home',
     },
   },
   {
@@ -34,7 +34,7 @@ const tabBarProps: TabBarProps[] = [
     tabBarLabel: 'Notifitcations',
     tabBarIconProps: {
       iconType: Ionicons,
-      iconName: 'notifications-outline',
+      iconName: 'notifications',
     },
   },
   {
@@ -43,7 +43,7 @@ const tabBarProps: TabBarProps[] = [
     tabBarLabel: 'Profile',
     tabBarIconProps: {
       iconType: Ionicons,
-      iconName: 'person-outline',
+      iconName: 'person',
     },
   },
 ];

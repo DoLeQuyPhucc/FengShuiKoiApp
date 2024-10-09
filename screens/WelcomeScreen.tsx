@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@/hooks/useNavigation';
+import Colors from '@/constants/Colors';
+
 
 const WelcomeScreen = () => {
 
   const navigation = useNavigation();
   
   const handleLogin = () => {
-    navigation.navigate("Main", {
-      screen: "Home",
-    })
+    navigation.navigate("LoginScreen");
   }
 
   return (
@@ -31,14 +31,14 @@ const WelcomeScreen = () => {
             <Text style={styles.buttonText}>Start Consultation</Text>
           </TouchableOpacity>
 
-          <View style={styles.smallButtonContainer}>
+          {/* <View style={styles.smallButtonContainer}>
             <TouchableOpacity style={styles.secondaryButton} onPress={() => {}}>
               <Text style={styles.smallButtonText}>Start Blogs</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.secondaryButton} onPress={() => {}}>
               <Text style={styles.smallButtonText}>Read Blogs</Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
       </View>
     </ImageBackground>
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 42,
     fontWeight: 'bold',
-    color: '#133048',
+    color: Colors.darkBlueText,
     textShadowColor: 'rgba(0, 0, 0, 0.7)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 10,
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#133048',
+    color: Colors.darkBlueText,
     textShadowColor: 'rgba(0, 0, 0, 0.6)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 8,
@@ -98,14 +98,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   mainButton: {
-    backgroundColor: '#1abc9c',
+    backgroundColor: Colors.lightGreen,
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 25,
     marginBottom: 20,
   },
   secondaryButton: {
-    backgroundColor: '#f39c12',
+    backgroundColor: Colors.warmOrange,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
