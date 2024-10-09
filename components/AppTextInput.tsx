@@ -6,10 +6,10 @@ import {
   View,
 } from "react-native";
 import React, { useState } from "react";
-import Spacing from "@/contants/Spacing";
-import FontSize from "@/contants/FontSize";
-import Colors from "@/contants/Colors";
-import Font from "@/contants/Font";
+import Spacing from "@/constants/Spacing";
+import FontSize from "@/constants/FontSize";
+import Colors from "@/constants/Colors";
+import Font from "@/constants/Font";
 
 const AppTextInput: React.FC<TextInputProps> = ({ ...otherProps }) => {
   const [focused, setFocused] = useState<boolean>(false);
