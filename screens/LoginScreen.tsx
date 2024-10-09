@@ -18,9 +18,10 @@ import { Ionicons } from "@expo/vector-icons";
 import AppTextInput from "@/components/AppTextInput";
 import { useNavigation } from "@/hooks/useNavigation";
 import { useFocusEffect } from "@react-navigation/native";
+import axiosInstance from "@/api/axiosInstance";
 
 const LoginScreen: React.FC = () => {
-  const [userName, setUserName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
@@ -37,15 +38,38 @@ const LoginScreen: React.FC = () => {
     }, [])
   );
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please fill in both Email and password");
+      return;
+    }
+
+    setLoading(true);
     try {
+      const response = await axiosInstance.post('/auth/login', {
+        email: email,
+        password,
+      });
+
+      const { accessToken, refreshToken } = response.data;
+
+      // Store tokens in AsyncStorage
+      await AsyncStorage.setItem('accessToken', accessToken);
+      await AsyncStorage.setItem('refreshToken', refreshToken);
+
+      // Navigate to the main screen
       navigation.navigate("Main", {
         screen: "Home"
       });
+
+      setEmail('');
+      setPassword('');
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      Alert.alert("Login Error", error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <SafeAreaView>
@@ -56,9 +80,9 @@ const LoginScreen: React.FC = () => {
         </View>
         <View style={{ marginVertical: Spacing * 3 }}>
           <AppTextInput 
-            placeholder="Username" 
-            value={userName}
-            onChangeText={setUserName}
+            placeholder="Email" 
+            value={email}
+            onChangeText={setEmail}
             autoCapitalize="none"
           />
           <AppTextInput 
@@ -70,7 +94,7 @@ const LoginScreen: React.FC = () => {
           />
         </View>
         <View>
-          <Text style={styles.forgotPassword}>Forgot your password ?</Text>
+          <Text style={styles.forgotPassword}>Forgot your password?</Text>
         </View>
         <TouchableOpacity
           style={styles.signInButton}
@@ -139,11 +163,6 @@ const styles = StyleSheet.create({
     color: Colors.onPrimary,
     textAlign: "center",
     fontSize: FontSize.large,
-  },
-  error: {
-    color: 'red',
-    marginBottom: 10,
-    textAlign: 'center',
   },
   createAccountText: {
     fontFamily: Font["poppins-semiBold"],
