@@ -15,6 +15,7 @@ import RegisterScreen from '@/screens/RegisterScreen';
 import HomeScreen from '@/screens/HomeScreen';
 import NotificationScreen from '@/screens/NotificationScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
+import BlogScreen from '@/screens/Blog/BlogsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -26,6 +27,15 @@ const tabBarProps: TabBarProps[] = [
     tabBarIconProps: {
       iconType: Ionicons,
       iconName: 'home',
+    },
+  },
+  {
+    route: 'Blogs',
+    component: BlogScreen,
+    tabBarLabel: 'Blogs',
+    tabBarIconProps: {
+      iconType: Ionicons,
+      iconName: 'newspaper',
     },
   },
   {
