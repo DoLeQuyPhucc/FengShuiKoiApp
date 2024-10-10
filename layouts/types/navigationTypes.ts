@@ -6,6 +6,7 @@ export type RootStackParamList = {
   LoginScreen: undefined;
   RegisterScreen: undefined;
   WelcomeScreen: undefined;
+  ResultScreen: { date: string };
   AuthLoadingScreen: undefined;
   SearchResults: { query: string };
   ProductDetail: undefined;
