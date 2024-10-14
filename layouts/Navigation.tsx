@@ -17,6 +17,7 @@ import NotificationScreen from '@/screens/NotificationScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
 import ResultScreen from '@/screens/ResultScreen'; 
 import BlogScreen from '@/screens/Blog/BlogsScreen';
+import ChatScreen from '@/screens/ChatScreen';
 const Stack = createStackNavigator<RootStackParamList>();
 
 
@@ -41,7 +42,7 @@ const tabBarProps: TabBarProps[] = [
   },
   {
     route: 'Notifications',
-    component: NotificationScreen,
+    component: ChatScreen,
     tabBarLabel: 'Notifitcations',
     tabBarIconProps: {
       iconType: Ionicons,
