@@ -29,4 +29,5 @@ export type BottomTabParamList = {
   Orders: undefined;
   Profile: undefined;
   Notifications: undefined;
+  Blogs: undefined;
 };
