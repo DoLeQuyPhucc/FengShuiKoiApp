@@ -8,15 +8,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomBottomTab, { TabBarProps } from './BottomBar';
 import fonts from '@/config/fonts';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList } from './types/navigationTypes';
+import { RootStackParamList } from './types/navigationTypes'; // Import the type
 import WelcomeScreen from '@/screens/WelcomeScreen';
 import LoginScreen from '@/screens/LoginScreen';
 import RegisterScreen from '@/screens/RegisterScreen';
 import HomeScreen from '@/screens/HomeScreen';
 import NotificationScreen from '@/screens/NotificationScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
-
+import ResultScreen from '@/screens/ResultScreen'; 
+import BlogScreen from '@/screens/Blog/BlogsScreen';
+import ChatScreen from '@/screens/ChatScreen';
 const Stack = createStackNavigator<RootStackParamList>();
+
 
 const tabBarProps: TabBarProps[] = [
   {
@@ -29,8 +32,17 @@ const tabBarProps: TabBarProps[] = [
     },
   },
   {
+    route: 'Blogs',
+    component: BlogScreen,
+    tabBarLabel: 'Blogs',
+    tabBarIconProps: {
+      iconType: Ionicons,
+      iconName: 'newspaper',
+    },
+  },
+  {
     route: 'Notifications',
-    component: NotificationScreen,
+    component: ChatScreen,
     tabBarLabel: 'Notifitcations',
     tabBarIconProps: {
       iconType: Ionicons,
@@ -85,6 +97,7 @@ export default function Navigation() {
           <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
           <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} /> 
         </Stack.Navigator>
     </NavigationContainer>
   );

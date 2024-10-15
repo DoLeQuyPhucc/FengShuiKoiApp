@@ -50,18 +50,19 @@ const LoginScreen: React.FC = () => {
         email: email,
         password,
       });
-
-      const { accessToken, refreshToken } = response.data;
-
-      // Store tokens in AsyncStorage
+    
+      const { accessToken, refreshToken, user } = response.data;
+    
+      // Store tokens and user ID in AsyncStorage
       await AsyncStorage.setItem('accessToken', accessToken);
       await AsyncStorage.setItem('refreshToken', refreshToken);
-
+      await AsyncStorage.setItem('userId', user.id);
+    
       // Navigate to the main screen
       navigation.navigate("Main", {
         screen: "Home"
       });
-
+    
       setEmail('');
       setPassword('');
     } catch (error: any) {
