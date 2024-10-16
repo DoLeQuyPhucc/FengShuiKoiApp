@@ -1,47 +1,61 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert, Image } from "react-native";
-import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import storage from '@react-native-firebase/storage';
 import { createBlogPost } from "./BlogsAPI";
 
 export default function CreatePostScreen() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [authorId, setAuthorId] = useState("");
-  const [pictureUri, setPictureUri] = useState<string | null>(null);
+  const [authorId, setAuthorId] = useState("64b0c8c7f0d55a001f0d7d1e");
+  const [imageUri, setImageUri] = useState("");
   const [uploading, setUploading] = useState(false);
   const [downloadURL, setDownloadURL] = useState<string | null>(null);
+  const [result, setResult] = useState<ImagePicker.ImagePickerResult | null>(null);
 
-  const selectImageFromLibrary = () => {
-    launchImageLibrary({ mediaType: 'photo' }, (response) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
-        console.log('ImagePicker Error: ', response.errorMessage);
-      } else {
-        const uri = response.assets?.[0]?.uri;
-        if (uri) {
-          setPictureUri(uri);
-        }
-      }
+  const requestPermission = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission required', 'Sorry, we need permission to access your media library.');
+    }
+  };
+  
+  const requestCameraPermission = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission required', 'Sorry, we need permission to access your camera.');
+    }
+  };
+  const pickImage = async () => {
+    await requestPermission(); // Kiểm tra quyền truy cập vào thư viện ảnh
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
     });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+      setResult(result);
+      // uploadImage(result);
+    }
   };
 
-  const takePhotoWithCamera = () => {
-    launchCamera({ mediaType: 'photo' }, (response) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
-        console.log('ImagePicker Error: ', response.errorMessage);
-      } else {
-        const uri = response.assets?.[0]?.uri;
-        if (uri) {
-          setPictureUri(uri);
-        }
-      }
-    });
-  };
+  const takePhoto = async () => {
+    await requestCameraPermission(); // Kiểm tra quyền truy cập vào camera
 
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+
+      setResult(result);
+    //   uploadImage(result);
+    }
+  };
   const uploadImageToFirebase = async (uri: string) => {
     if (!uri) return null;
 
@@ -78,15 +92,16 @@ export default function CreatePostScreen() {
 
     try {
       // Upload image to Firebase
-      const firebaseImageUrl = pictureUri ? await uploadImageToFirebase(pictureUri) : null;
+    //   const firebaseImageUrl = pictureUri ? await uploadImageToFirebase(pictureUri) : null;
 
       // Tạo bài post sau khi upload ảnh thành công
       const newPost = {
         title,
         content,
-        picture: firebaseImageUrl, // Sử dụng URL từ Firebase
+        picture: imageUri,
         authorId,
       };
+      console.log(newPost);
 
       await createBlogPost(newPost);
       Alert.alert("Success", "Post created successfully!");
@@ -114,21 +129,13 @@ export default function CreatePostScreen() {
         multiline
       />
 
-      <Text style={styles.label}>Author ID</Text>
-      <TextInput
-        style={styles.input}
-        value={authorId}
-        onChangeText={setAuthorId}
-        placeholder="Enter author ID"
-      />
-
       <View style={styles.imagePicker}>
-        <Button title="Select Image from Library" onPress={selectImageFromLibrary} />
-        <Button title="Take Photo with Camera" onPress={takePhotoWithCamera} />
+        <Button title="Select Image from Library" onPress={pickImage} />
+        <Button title="Take Photo with Camera" onPress={takePhoto} />
       </View>
 
-      {pictureUri && (
-        <Image source={{ uri: pictureUri }} style={styles.previewImage} />
+      {imageUri && (
+        <Image source={{ uri: imageUri }} style={styles.previewImage} />
       )}
 
       <View style={styles.buttonContainer}>

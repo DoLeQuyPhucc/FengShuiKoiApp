@@ -12,13 +12,31 @@ export const fetchAllBlogs = async () => {
 }
 
 export const createBlogPost = async (newPost: any) => {
+  const formData = new FormData();
+
+  // Thêm các trường dữ liệu vào FormData
+  formData.append('title', newPost.title);
+  formData.append('content', newPost.content);
+  formData.append('authorId', newPost.authorId);
+
+  const uri = await fetch(newPost.image.uri);
+  const blob = await uri.blob();
+  
+  formData.append('picture', blob, newPost.image.uri.split('/').pop());
+
+  console.log("formData");  
+  console.log(formData);  
   const response = await fetch("https://fengshuikoiapi.onrender.com/api/blog/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(newPost),
+    body: formData,
   });
+  
+  console.log("response");
+  
+  console.log(response);
 
   if (!response.ok) {
     throw new Error("Error creating blog post");
