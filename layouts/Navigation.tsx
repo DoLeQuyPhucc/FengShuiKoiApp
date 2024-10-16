@@ -43,7 +43,7 @@ const tabBarProps: TabBarProps[] = [
   {
     route: 'Notifications',
     component: ChatScreen,
-    tabBarLabel: 'Notifitcations',
+    tabBarLabel: 'Notifications',
     tabBarIconProps: {
       iconType: Ionicons,
       iconName: 'notifications',
