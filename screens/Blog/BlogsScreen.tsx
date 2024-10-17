@@ -2,7 +2,8 @@ import { useNavigation } from "@/hooks/useNavigation";
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { fetchAllBlogs } from "./BlogsAPI";
-import Icon from "react-native-vector-icons/MaterialIcons"; // Import icon library for "+" icon
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface Blog {
   _id: string;
@@ -16,16 +17,24 @@ export default function App() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const loadBlogs = async () => {
-      const fetchedBlogs = await fetchAllBlogs();
-      setBlogs(fetchedBlogs);
-    };
-    loadBlogs();
-  }, []);
+  const fetchBlogPosts = async () => {
+    try {
+      const response = await fetchAllBlogs();
+      setBlogs(response);
+    } catch (error) {
+      console.error("Failed to fetch blog posts", error);
+    }
+  };
+
+  // Khi màn hình được focus, gọi lại hàm fetchBlogPosts
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchBlogPosts();
+    }, [])
+  );
 
   const handleCreatePost = () => {
-    navigation.navigate("CreatePostScreen"); // Điều hướng đến trang tạo bài post
+    navigation.navigate("CreatePostScreen");
   };
 
   return (

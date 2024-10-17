@@ -3,15 +3,24 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert, Image } f
 import * as ImagePicker from 'expo-image-picker';
 import storage from '@react-native-firebase/storage';
 import { createBlogPost } from "./BlogsAPI";
+import {RouteProp, useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from "@/layouts/types/navigationTypes";
 
-export default function CreatePostScreen() {
+type CreatePostScreenRouteProp = RouteProp<RootStackParamList, "CreatePostScreen">;
+
+type Props = {
+  route: CreatePostScreenRouteProp;
+};
+
+const CreatePostScreen: React.FC<Props> = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [authorId, setAuthorId] = useState("64b0c8c7f0d55a001f0d7d1e");
   const [imageUri, setImageUri] = useState("");
   const [uploading, setUploading] = useState(false);
   const [downloadURL, setDownloadURL] = useState<string | null>(null);
-  const [result, setResult] = useState<ImagePicker.ImagePickerResult | null>(null);
+
+  const navigation = useNavigation();
 
   const requestPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -27,7 +36,7 @@ export default function CreatePostScreen() {
     }
   };
   const pickImage = async () => {
-    await requestPermission(); // Kiểm tra quyền truy cập vào thư viện ảnh
+    await requestPermission();
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -36,13 +45,11 @@ export default function CreatePostScreen() {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-      setResult(result);
-      // uploadImage(result);
     }
   };
 
   const takePhoto = async () => {
-    await requestCameraPermission(); // Kiểm tra quyền truy cập vào camera
+    await requestCameraPermission();
 
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -51,36 +58,6 @@ export default function CreatePostScreen() {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-
-      setResult(result);
-    //   uploadImage(result);
-    }
-  };
-  const uploadImageToFirebase = async (uri: string) => {
-    if (!uri) return null;
-
-    const filename = uri.substring(uri.lastIndexOf('/') + 1);
-    const storageRef = storage().ref(`images/${filename}`);
-    
-    setUploading(true);
-
-    const task = storageRef.putFile(uri);
-
-    // Monitor the upload progress
-    task.on('state_changed', snapshot => {
-      console.log(`Transferred: ${snapshot.bytesTransferred} bytes`);
-    });
-
-    try {
-      await task;
-      const url = await storageRef.getDownloadURL();
-      setDownloadURL(url);
-      setUploading(false);
-      return url;
-    } catch (e) {
-      console.error(e);
-      setUploading(false);
-      return null;
     }
   };
 
@@ -91,19 +68,14 @@ export default function CreatePostScreen() {
     }
 
     try {
-      // Upload image to Firebase
-    //   const firebaseImageUrl = pictureUri ? await uploadImageToFirebase(pictureUri) : null;
-
-      // Tạo bài post sau khi upload ảnh thành công
       const newPost = {
         title,
         content,
         picture: imageUri,
         authorId,
       };
-      console.log(newPost);
-
       await createBlogPost(newPost);
+      navigation.goBack()
       Alert.alert("Success", "Post created successfully!");
     } catch (error) {
       Alert.alert("Error", "Failed to create the post. Please try again.");
@@ -186,3 +158,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+
+export default CreatePostScreen;
