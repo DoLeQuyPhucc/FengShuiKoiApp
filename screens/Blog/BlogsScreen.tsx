@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    paddingVertical: 30,
     backgroundColor: "#f5f5f5",
   },
   blogContainer: {
@@ -151,6 +152,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 8,
     padding: 16,
+    paddingBottom: 4,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -164,11 +166,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 12,
   },
-  // title: {
-  //   fontSize: 18,
-  //   fontWeight: "bold",
-  //   marginBottom: 8,
-  // },
   content: {
     fontSize: 14,
     color: "#333",

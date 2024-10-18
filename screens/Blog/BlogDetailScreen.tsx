@@ -18,7 +18,6 @@ type Props = {
 
 const BlogDetailScreen: React.FC<Props> = ({ route }) => {
   const blog = route.params?.blog as Blog;
-  console.log(blog)
   const [id, setId] = useState(blog?._id || "");
   const [title, setTitle] = useState(blog?.title || "");
   const [content, setContent] = useState(blog?.content || "");
