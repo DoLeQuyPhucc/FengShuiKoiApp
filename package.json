@@ -11,6 +11,8 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.0.0",
     "@react-native-community/datetimepicker": "^8.2.0",
+    "@react-native-firebase/app": "^21.0.0",
+    "@react-native-firebase/storage": "^21.0.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/material-bottom-tabs": "^6.2.29",
     "@react-navigation/native": "^6.1.18",
@@ -21,16 +23,21 @@
     "expo-splash-screen": "^0.27.6",
     "expo-status-bar": "~1.12.1",
     "expo-web-browser": "^13.0.3",
+    "firebase": "^10.14.1",
     "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-native": "0.74.5",
     "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-popup-menu": "^0.16.1",
     "react-native-safe-area-context": "^4.11.0",
     "react-native-sound": "^0.11.2",
+    "react-native-sound-player": "^0.14.3",
     "react-native-toast-message": "^2.2.1",
     "react-native-vector-icons": "^10.2.0",
+    "react-native-web": "~0.19.10",
     "socket.io-client": "^4.8.0",
-    "zustand": "^5.0.0-rc.2"
+    "zustand": "^5.0.0-rc.2",
+    "expo-image-picker": "~15.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

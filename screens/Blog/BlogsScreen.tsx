@@ -1,9 +1,13 @@
 import { useNavigation } from "@/hooks/useNavigation";
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView, StyleSheet } from "react-native";
-import { fetchAllBlogs } from "./BlogsAPI";
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { fetchAllBlogs,
+   deleteBlogPost 
+  } from "./BlogsAPI";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useFocusEffect } from "@react-navigation/native";
 
-interface Blog {
+export interface Blog {
   _id: string;
   title: string;
   content: string;
@@ -14,29 +18,84 @@ interface Blog {
 export default function App() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const navigation = useNavigation();
-  // const { favorites, toggleFavorite } = useFavorite();
 
-  useEffect(() => {
-    const loadBlogs = async () => {
-      const fetchedBlogs = await fetchAllBlogs();
-      setBlogs(fetchedBlogs);
-    };
-    loadBlogs();
-  }, []);
+  const fetchBlogPosts = async () => {
+    try {
+      const response = await fetchAllBlogs();
+      setBlogs(response);
+    } catch (error) {
+      console.error("Failed to fetch blog posts", error);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchBlogPosts();
+    }, [])
+  );
+
+  const handleCreatePost = () => {
+    navigation.navigate("CreatePostScreen");
+  };
+
+  const handleEditPost = (blog: Blog) => {
+    navigation.navigate("CreatePostScreen", { blog });
+  };
+
+  const handleDeletePost = async (id: string) => {
+    try {
+      await deleteBlogPost(id);
+      fetchBlogPosts();
+      Alert.alert("Deleted", "The blog post has been deleted.");
+    } catch (error) {
+      Alert.alert("Error", "Failed to delete the post.");
+    }
+  };
+
+  const renderOptionsMenu = (blog: Blog) => {
+    return (
+      <View style={styles.menuIconContainer}>
+        <TouchableOpacity>
+          <Icon name="more-vert" size={24} onPress={() => showPostOptions(blog)} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const showPostOptions = (blog: Blog) => {
+    Alert.alert(
+      "Post Options",
+      "",
+      [
+        { text: "Edit", onPress: () => handleEditPost(blog) },
+        { text: "Delete", onPress: () => handleDeletePost(blog._id), style: "destructive" },
+        { text: "Cancel", style: "cancel" }
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      {blogs.map((blog) => (
-        <View key={blog._id} style={styles.blogContainer}>
-          <Image source={{ uri: blog.picture }} style={styles.image} />
-          <Text style={styles.title}>{blog.title}</Text>
-          <Text style={styles.content}>{blog.content}</Text>
-          <Text style={styles.createdAt}>
-            {new Date(blog.createdAt).toLocaleDateString()}
-          </Text>
-        </View>
-      ))}
-    </ScrollView>
+    <View style={styles.container}>
+      <ScrollView>
+        {blogs.map((blog) => (
+          <View key={blog._id} style={styles.blogContainer}>
+           <Image source={{ uri: blog.picture }} style={styles.image} />
+            <Text style={styles.title}>{blog.title}</Text> 
+            <Text style={styles.content}>{blog.content}</Text>
+            <Text style={styles.createdAt}>
+              {new Date(blog.createdAt).toLocaleDateString()}
+            </Text>
+            {renderOptionsMenu(blog)}
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* Nút "+" */}
+      <TouchableOpacity style={styles.fab} onPress={handleCreatePost}>
+        <Icon name="add" size={24} color="white" />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -72,7 +131,7 @@ const styles = StyleSheet.create({
   content: {
     fontSize: 14,
     color: "#333",
-    marginBottom: 20, // Add margin to ensure text doesn't overlap with createdAt
+    marginBottom: 20,
   },
   createdAt: {
     position: "absolute",
@@ -80,5 +139,26 @@ const styles = StyleSheet.create({
     bottom: 10,
     fontSize: 12,
     color: "#888",
+  },
+  menuIconContainer: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    backgroundColor: "#007bff",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
   },
 });

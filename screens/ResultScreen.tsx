@@ -55,7 +55,6 @@ const ResultScreen: React.FC<Props> = ({ route }) => {
         const response = await api.get(`/consultation/${date}`);
         setData(response.data);
         setElement(response.data.element as ElementType);
-        console.log(response.data);
       } catch (error) {
         console.error("Error fetching element:", error);
       } finally {
