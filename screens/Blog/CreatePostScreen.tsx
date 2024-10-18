@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert, Image } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
-import storage from '@react-native-firebase/storage';
-import { createBlogPost } from "./BlogsAPI";
-import {RouteProp, useNavigation } from '@react-navigation/native';
+import { createBlogPost, 
+  updateBlogPost 
+} from "./BlogsAPI"; // import updateBlogPost
+import { RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from "@/layouts/types/navigationTypes";
 
 type CreatePostScreenRouteProp = RouteProp<RootStackParamList, "CreatePostScreen">;
@@ -12,32 +13,23 @@ type Props = {
   route: CreatePostScreenRouteProp;
 };
 
-const CreatePostScreen: React.FC<Props> = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [authorId, setAuthorId] = useState("64b0c8c7f0d55a001f0d7d1e");
-  const [imageUri, setImageUri] = useState("");
+const CreatePostScreen: React.FC<Props> = ({ route }) => {
+  const blog = route.params?.blog; // Access the blog being edited if provided
+
+
+  const [initialTitle, setInitialTitle] = useState(blog?.title || "");
+  const [initialContent, setInitialContent] = useState(blog?.content || "");
+  const [initialImageUri, setInitialImageUri] = useState(blog?.picture || "");
+
+  const [title, setTitle] = useState(blog?.title || "");
+  const [content, setContent] = useState(blog?.content || "");
+  const [imageUri, setImageUri] = useState(blog?.picture || "");
   const [uploading, setUploading] = useState(false);
-  const [downloadURL, setDownloadURL] = useState<string | null>(null);
+  const [authorId, setAuthorId] = useState("64b0c8c7f0d55a001f0d7d1e"); // Assuming a fixed authorId for simplicity
 
   const navigation = useNavigation();
 
-  const requestPermission = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission required', 'Sorry, we need permission to access your media library.');
-    }
-  };
-  
-  const requestCameraPermission = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission required', 'Sorry, we need permission to access your camera.');
-    }
-  };
   const pickImage = async () => {
-    await requestPermission();
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
@@ -48,37 +40,47 @@ const CreatePostScreen: React.FC<Props> = () => {
     }
   };
 
-  const takePhoto = async () => {
-    await requestCameraPermission();
+  const getUpdatedFields = () => {
+    const updatedFields: any = {};
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+    if (title !== initialTitle) {
+      updatedFields.title = title;
     }
+    if (content !== initialContent) {
+      updatedFields.content = content;
+    }
+    if (imageUri !== initialImageUri) {
+      updatedFields.picture = imageUri;
+    }
+
+    return updatedFields;
   };
 
-  const handleCreatePost = async () => {
+  const handleSavePost = async () => {
     if (!title || !content || !authorId) {
       Alert.alert("Error", "Please fill in all the fields.");
       return;
     }
 
+    setUploading(true);
+
     try {
-      const newPost = {
-        title,
-        content,
-        picture: imageUri,
-        authorId,
-      };
-      await createBlogPost(newPost);
-      navigation.goBack()
-      Alert.alert("Success", "Post created successfully!");
+      const updatedFields = getUpdatedFields();
+      const postData = { ...updatedFields, authorId };
+      if (blog) {
+        console.log("put")
+        await updateBlogPost(blog._id, postData);
+        Alert.alert("Success", "Post updated successfully!");
+      } else {
+        await createBlogPost(postData);
+        Alert.alert("Success", "Post created successfully!");
+      }
+
+      navigation.goBack();
     } catch (error) {
-      Alert.alert("Error", "Failed to create the post. Please try again.");
+      Alert.alert("Error", "Failed to save the post. Please try again.");
+    } finally {
+      setUploading(false); // End loading
     }
   };
 
@@ -101,10 +103,7 @@ const CreatePostScreen: React.FC<Props> = () => {
         multiline
       />
 
-      <View style={styles.imagePicker}>
-        <Button title="Select Image from Library" onPress={pickImage} />
-        <Button title="Take Photo with Camera" onPress={takePhoto} />
-      </View>
+      <Button title="Select Image from Library" onPress={pickImage} />
 
       {imageUri && (
         <Image source={{ uri: imageUri }} style={styles.previewImage} />
@@ -112,14 +111,14 @@ const CreatePostScreen: React.FC<Props> = () => {
 
       <View style={styles.buttonContainer}>
         <Button
-          title={uploading ? "Uploading..." : "Create Post"}
-          onPress={handleCreatePost}
+          title={uploading ? "Uploading..." : blog ? "Update Post" : "Create Post"}
+          onPress={handleSavePost}
           disabled={uploading}
         />
       </View>
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -133,29 +132,23 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#ddd",
     borderRadius: 8,
-    padding: 10,
+    padding: 12,
     marginBottom: 16,
-    fontSize: 16,
   },
   contentInput: {
-    height: 100,
+    height: 150,
     textAlignVertical: "top",
-  },
-  imagePicker: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginVertical: 10,
   },
   previewImage: {
     width: "100%",
     height: 200,
-    marginVertical: 10,
     borderRadius: 8,
+    marginVertical: 16,
   },
   buttonContainer: {
-    marginTop: 20,
+    marginTop: 16,
   },
 });
 

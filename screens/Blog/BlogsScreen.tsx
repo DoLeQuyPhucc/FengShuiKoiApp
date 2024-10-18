@@ -1,11 +1,13 @@
 import { useNavigation } from "@/hooks/useNavigation";
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
-import { fetchAllBlogs } from "./BlogsAPI";
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { fetchAllBlogs,
+   deleteBlogPost 
+  } from "./BlogsAPI";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect } from "@react-navigation/native";
 
-interface Blog {
+export interface Blog {
   _id: string;
   title: string;
   content: string;
@@ -26,7 +28,6 @@ export default function App() {
     }
   };
 
-  // Khi màn hình được focus, gọi lại hàm fetchBlogPosts
   useFocusEffect(
     React.useCallback(() => {
       fetchBlogPosts();
@@ -37,17 +38,55 @@ export default function App() {
     navigation.navigate("CreatePostScreen");
   };
 
+  const handleEditPost = (blog: Blog) => {
+    navigation.navigate("CreatePostScreen", { blog });
+  };
+
+  const handleDeletePost = async (id: string) => {
+    try {
+      await deleteBlogPost(id);
+      fetchBlogPosts();
+      Alert.alert("Deleted", "The blog post has been deleted.");
+    } catch (error) {
+      Alert.alert("Error", "Failed to delete the post.");
+    }
+  };
+
+  const renderOptionsMenu = (blog: Blog) => {
+    return (
+      <View style={styles.menuIconContainer}>
+        <TouchableOpacity>
+          <Icon name="more-vert" size={24} onPress={() => showPostOptions(blog)} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const showPostOptions = (blog: Blog) => {
+    Alert.alert(
+      "Post Options",
+      "",
+      [
+        { text: "Edit", onPress: () => handleEditPost(blog) },
+        { text: "Delete", onPress: () => handleDeletePost(blog._id), style: "destructive" },
+        { text: "Cancel", style: "cancel" }
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView>
         {blogs.map((blog) => (
           <View key={blog._id} style={styles.blogContainer}>
-            <Image source={{ uri: blog.picture }} style={styles.image} />
-            <Text style={styles.title}>{blog.title}</Text>
+           <Image source={{ uri: blog.picture }} style={styles.image} />
+            <Text style={styles.title}>{blog.title}</Text> 
             <Text style={styles.content}>{blog.content}</Text>
             <Text style={styles.createdAt}>
               {new Date(blog.createdAt).toLocaleDateString()}
             </Text>
+            {renderOptionsMenu(blog)}
           </View>
         ))}
       </ScrollView>
@@ -101,7 +140,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#888",
   },
-  // Floating Action Button (FAB) style
+  menuIconContainer: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
   fab: {
     position: "absolute",
     right: 20,

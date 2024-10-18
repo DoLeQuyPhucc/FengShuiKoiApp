@@ -1,3 +1,5 @@
+import { Blog } from "@/screens/Blog/BlogsScreen";
+
 export type RootStackParamList = {
   Main: {
     screen: keyof BottomTabParamList;
@@ -22,7 +24,7 @@ export type RootStackParamList = {
   FilterResults: { brandName: string };
   EditProfileScreen: undefined;
   ChangePasswordScreen: undefined;
-  CreatePostScreen: undefined;
+  CreatePostScreen: undefined | { blog: Blog };
 };
 
 export type BottomTabParamList = {
