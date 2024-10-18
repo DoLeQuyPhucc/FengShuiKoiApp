@@ -12,6 +12,7 @@ import {
 import { fetchAllBlogs, deleteBlogPost } from "./BlogsAPI";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect } from "@react-navigation/native";
+import { useFavorite } from "@/context/FavouriteBlogContext";
 
 export interface Blog {
   _id: string;
@@ -24,6 +25,8 @@ export interface Blog {
 export default function App() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const navigation = useNavigation();
+  
+  const { addFavorite, removeFavorite, isFavorite } = useFavorite();
 
   const fetchBlogPosts = async () => {
     try {
@@ -93,6 +96,14 @@ export default function App() {
     );
   };
 
+  const handleHeartPress = (blog: Blog) => {
+    if (isFavorite(blog._id)) {
+      removeFavorite(blog._id);
+    } else {
+      addFavorite(blog);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -100,7 +111,17 @@ export default function App() {
           <View key={blog._id} style={styles.blogContainer}>
               <TouchableOpacity onPress={() => handleBlogDetail(blog)}>
               <Image source={{ uri: blog.picture }} style={styles.image} />
-              <Text style={styles.title}>{blog.title}</Text>
+              <View style={styles.headerContainer}>
+          <Text style={styles.titleHeader}>{blog.title}</Text>
+              <TouchableOpacity onPress={() => handleHeartPress(blog)} style={styles.heartIconContainer}>
+                <Icon
+                  name={isFavorite(blog._id) ? "favorite" : "favorite-border"}
+                  size={24}
+                  color={isFavorite(blog._id) ? "#ff6347" : "#ccc"}
+                  style={styles.heartIcon}
+                />
+              </TouchableOpacity>
+            </View>
               <Text style={styles.content}>{blog.content}</Text>
               <Text style={styles.createdAt}>
                 {new Date(blog.createdAt).toLocaleDateString()}
@@ -143,11 +164,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 12,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
+  // title: {
+  //   fontSize: 18,
+  //   fontWeight: "bold",
+  //   marginBottom: 8,
+  // },
   content: {
     fontSize: 14,
     color: "#333",
@@ -180,5 +201,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 5,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  heartIconContainer: {
+    width: "10%",
+    alignItems: "flex-end",
+  },
+  titleHeader: {
+    width: "90%",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "left",
+  },
+  heartIcon: {
+    marginLeft: 10,
   },
 });
