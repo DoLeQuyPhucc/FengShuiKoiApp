@@ -1,11 +1,18 @@
 import { useNavigation } from "@/hooks/useNavigation";
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { fetchAllBlogs,
-   deleteBlogPost 
-  } from "./BlogsAPI";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { fetchAllBlogs, deleteBlogPost } from "./BlogsAPI";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect } from "@react-navigation/native";
+import { useFavorite } from "@/context/FavouriteBlogContext";
 
 export interface Blog {
   _id: string;
@@ -18,6 +25,8 @@ export interface Blog {
 export default function App() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const navigation = useNavigation();
+  
+  const { addFavorite, removeFavorite, isFavorite } = useFavorite();
 
   const fetchBlogPosts = async () => {
     try {
@@ -42,6 +51,10 @@ export default function App() {
     navigation.navigate("CreatePostScreen", { blog });
   };
 
+  const handleBlogDetail = (blog: Blog) => {
+    navigation.navigate("BlogDetailScreen", { blog });
+  };
+
   const handleDeletePost = async (id: string) => {
     try {
       await deleteBlogPost(id);
@@ -56,7 +69,11 @@ export default function App() {
     return (
       <View style={styles.menuIconContainer}>
         <TouchableOpacity>
-          <Icon name="more-vert" size={24} onPress={() => showPostOptions(blog)} />
+          <Icon
+            name="more-vert"
+            size={24}
+            onPress={() => showPostOptions(blog)}
+          />
         </TouchableOpacity>
       </View>
     );
@@ -68,11 +85,23 @@ export default function App() {
       "",
       [
         { text: "Edit", onPress: () => handleEditPost(blog) },
-        { text: "Delete", onPress: () => handleDeletePost(blog._id), style: "destructive" },
-        { text: "Cancel", style: "cancel" }
+        {
+          text: "Delete",
+          onPress: () => handleDeletePost(blog._id),
+          style: "destructive",
+        },
+        { text: "Cancel", style: "cancel" },
       ],
       { cancelable: true }
     );
+  };
+
+  const handleHeartPress = (blog: Blog) => {
+    if (isFavorite(blog._id)) {
+      removeFavorite(blog._id);
+    } else {
+      addFavorite(blog);
+    }
   };
 
   return (
@@ -80,14 +109,26 @@ export default function App() {
       <ScrollView>
         {blogs.map((blog) => (
           <View key={blog._id} style={styles.blogContainer}>
-           <Image source={{ uri: blog.picture }} style={styles.image} />
-            <Text style={styles.title}>{blog.title}</Text> 
-            <Text style={styles.content}>{blog.content}</Text>
-            <Text style={styles.createdAt}>
-              {new Date(blog.createdAt).toLocaleDateString()}
-            </Text>
-            {renderOptionsMenu(blog)}
-          </View>
+              <TouchableOpacity onPress={() => handleBlogDetail(blog)}>
+              <Image source={{ uri: blog.picture }} style={styles.image} />
+              <View style={styles.headerContainer}>
+          <Text style={styles.titleHeader}>{blog.title}</Text>
+              <TouchableOpacity onPress={() => handleHeartPress(blog)} style={styles.heartIconContainer}>
+                <Icon
+                  name={isFavorite(blog._id) ? "favorite" : "favorite-border"}
+                  size={24}
+                  color={isFavorite(blog._id) ? "#ff6347" : "#ccc"}
+                  style={styles.heartIcon}
+                />
+              </TouchableOpacity>
+            </View>
+              <Text style={styles.content}>{blog.content}</Text>
+              <Text style={styles.createdAt}>
+                {new Date(blog.createdAt).toLocaleDateString()}
+              </Text>
+              {renderOptionsMenu(blog)}
+          </TouchableOpacity>
+            </View>
         ))}
       </ScrollView>
 
@@ -123,11 +164,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 12,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
+  // title: {
+  //   fontSize: 18,
+  //   fontWeight: "bold",
+  //   marginBottom: 8,
+  // },
   content: {
     fontSize: 14,
     color: "#333",
@@ -160,5 +201,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 5,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  heartIconContainer: {
+    width: "10%",
+    alignItems: "flex-end",
+  },
+  titleHeader: {
+    width: "90%",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "left",
+  },
+  heartIcon: {
+    marginLeft: 10,
   },
 });

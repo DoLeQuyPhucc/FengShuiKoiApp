@@ -18,6 +18,7 @@ import ProfileScreen from '@/screens/ProfileScreen';
 import BlogScreen from '@/screens/Blog/BlogsScreen';
 import CreatePostScreen from '@/screens/Blog/CreatePostScreen';
 import ChatScreen from '@/screens/ChatScreen';
+import BlogDetailScreen from '@/screens/Blog/BlogDetailScreen';
 const Stack = createStackNavigator<RootStackParamList>();
 
 
@@ -109,6 +110,7 @@ export default function Navigation() {
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
           <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="CreatePostScreen" component={CreatePostScreen} options={{ headerShown: false }} /> 
+          <Stack.Screen name="BlogDetailScreen" component={BlogDetailScreen} options={{ headerShown: false }} /> 
         </Stack.Navigator>
     </NavigationContainer>
   );
