@@ -25,6 +25,7 @@ export type RootStackParamList = {
   EditProfileScreen: undefined;
   ChangePasswordScreen: undefined;
   CreatePostScreen: undefined | { blog: Blog };
+  BlogDetailScreen: undefined | { blog: Blog };
 };
 
 export type BottomTabParamList = {

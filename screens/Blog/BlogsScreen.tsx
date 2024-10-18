@@ -1,9 +1,15 @@
 import { useNavigation } from "@/hooks/useNavigation";
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { fetchAllBlogs,
-   deleteBlogPost 
-  } from "./BlogsAPI";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { fetchAllBlogs, deleteBlogPost } from "./BlogsAPI";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -42,6 +48,10 @@ export default function App() {
     navigation.navigate("CreatePostScreen", { blog });
   };
 
+  const handleBlogDetail = (blog: Blog) => {
+    navigation.navigate("BlogDetailScreen", { blog });
+  };
+
   const handleDeletePost = async (id: string) => {
     try {
       await deleteBlogPost(id);
@@ -56,7 +66,11 @@ export default function App() {
     return (
       <View style={styles.menuIconContainer}>
         <TouchableOpacity>
-          <Icon name="more-vert" size={24} onPress={() => showPostOptions(blog)} />
+          <Icon
+            name="more-vert"
+            size={24}
+            onPress={() => showPostOptions(blog)}
+          />
         </TouchableOpacity>
       </View>
     );
@@ -68,8 +82,12 @@ export default function App() {
       "",
       [
         { text: "Edit", onPress: () => handleEditPost(blog) },
-        { text: "Delete", onPress: () => handleDeletePost(blog._id), style: "destructive" },
-        { text: "Cancel", style: "cancel" }
+        {
+          text: "Delete",
+          onPress: () => handleDeletePost(blog._id),
+          style: "destructive",
+        },
+        { text: "Cancel", style: "cancel" },
       ],
       { cancelable: true }
     );
@@ -80,14 +98,16 @@ export default function App() {
       <ScrollView>
         {blogs.map((blog) => (
           <View key={blog._id} style={styles.blogContainer}>
-           <Image source={{ uri: blog.picture }} style={styles.image} />
-            <Text style={styles.title}>{blog.title}</Text> 
-            <Text style={styles.content}>{blog.content}</Text>
-            <Text style={styles.createdAt}>
-              {new Date(blog.createdAt).toLocaleDateString()}
-            </Text>
-            {renderOptionsMenu(blog)}
-          </View>
+              <TouchableOpacity onPress={() => handleBlogDetail(blog)}>
+              <Image source={{ uri: blog.picture }} style={styles.image} />
+              <Text style={styles.title}>{blog.title}</Text>
+              <Text style={styles.content}>{blog.content}</Text>
+              <Text style={styles.createdAt}>
+                {new Date(blog.createdAt).toLocaleDateString()}
+              </Text>
+              {renderOptionsMenu(blog)}
+          </TouchableOpacity>
+            </View>
         ))}
       </ScrollView>
 
