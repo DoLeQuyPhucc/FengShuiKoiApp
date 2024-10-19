@@ -5,8 +5,8 @@ import { RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from "@/layouts/types/navigationTypes";
 import { useFavorite } from "@/context/FavouriteBlogContext";
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Blog } from "../Blog/BlogsScreen";
 import Colors from "@/constants/Colors";
+import { Blog } from "@/shared/Interface/Blog";
 
 type FavoriteBlogScreenRouteProp = RouteProp<RootStackParamList, "ListFavoriteBlogScreen">;
 

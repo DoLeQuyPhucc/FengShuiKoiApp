@@ -14,14 +14,7 @@ import { fetchAllBlogs, deleteBlogPost } from "./BlogsAPI";
 import { useFocusEffect } from "@react-navigation/native";
 import { useFavorite } from "@/context/FavouriteBlogContext";
 import Icon from 'react-native-vector-icons/Ionicons';
-
-export interface Blog {
-  _id: string;
-  title: string;
-  content: string;
-  picture: string;
-  createdAt: string;
-}
+import { Blog } from "@/shared/Interface/Blog";
 
 export default function App() {
   const [blogs, setBlogs] = useState<Blog[]>([]);

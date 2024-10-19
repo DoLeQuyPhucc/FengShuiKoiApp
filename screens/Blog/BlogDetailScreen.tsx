@@ -3,9 +3,9 @@ import { RouteProp } from "@react-navigation/native";
 import { useNavigation } from "expo-router";
 import React, { useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Blog } from "./BlogsScreen";
 import { useFavorite } from "@/context/FavouriteBlogContext";
 import Icon from 'react-native-vector-icons/Ionicons';
+import { Blog } from "@/shared/Interface/Blog";
 
 type BlogDetailScreenRouteProp = RouteProp<
   RootStackParamList,

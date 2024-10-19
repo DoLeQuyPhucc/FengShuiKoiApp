@@ -1,4 +1,5 @@
-import { Blog } from "@/screens/Blog/BlogsScreen";
+import { Blog } from "@/shared/Interface/Blog";
+import { Order } from "@/shared/Interface/Order";
 
 export type RootStackParamList = {
   Main: {
@@ -27,6 +28,8 @@ export type RootStackParamList = {
   CreatePostScreen: undefined | { blog: Blog };
   BlogDetailScreen: { blog: Blog };
   ListFavoriteBlogScreen: undefined;
+  CheckoutScreen: undefined;
+  OrderConfirmationScreen: { order: Order };
 };
 
 export type BottomTabParamList = {

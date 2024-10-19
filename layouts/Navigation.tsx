@@ -20,6 +20,8 @@ import CreatePostScreen from '@/screens/Blog/CreatePostScreen';
 import ChatScreen from '@/screens/ChatScreen';
 import BlogDetailScreen from '@/screens/Blog/BlogDetailScreen';
 import FavoriteBlogScreen from '@/screens/FavoriteBlog/FavoriteBlogScreen';
+import CheckoutScreen from '@/screens/Order/Checkout';
+import OrderConfirmationScreen from '@/screens/Order/ConfirmOrder';
 const Stack = createStackNavigator<RootStackParamList>();
 
 
@@ -44,7 +46,7 @@ const tabBarProps: TabBarProps[] = [
   },
   {
     route: 'Notifications',
-    component: ChatScreen,
+    component: CheckoutScreen,
     tabBarLabel: 'Notifications',
     tabBarIconProps: {
       iconType: Ionicons,
@@ -113,6 +115,8 @@ export default function Navigation() {
           <Stack.Screen name="CreatePostScreen" component={CreatePostScreen} options={{ headerShown: false }} /> 
           <Stack.Screen name="BlogDetailScreen" component={BlogDetailScreen} options={{ headerShown: false }} /> 
           <Stack.Screen name="ListFavoriteBlogScreen" component={FavoriteBlogScreen} options={{ headerShown: false }} /> 
+          <Stack.Screen name="CheckoutScreen" component={CheckoutScreen}  options={{ headerShown: false }}  />
+          <Stack.Screen name="OrderConfirmationScreen" component={OrderConfirmationScreen} options={{ headerShown: false }}  />
         </Stack.Navigator>
     </NavigationContainer>
   );
