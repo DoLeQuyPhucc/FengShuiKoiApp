@@ -10,9 +10,10 @@ import {
   Alert,
 } from "react-native";
 import { fetchAllBlogs, deleteBlogPost } from "./BlogsAPI";
-import Icon from "react-native-vector-icons/MaterialIcons";
+// import Icon from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useFavorite } from "@/context/FavouriteBlogContext";
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export interface Blog {
   _id: string;
@@ -70,7 +71,7 @@ export default function App() {
       <View style={styles.menuIconContainer}>
         <TouchableOpacity>
           <Icon
-            name="more-vert"
+            name="ellipsis-vertical-outline"
             size={24}
             onPress={() => showPostOptions(blog)}
           />
@@ -113,16 +114,21 @@ export default function App() {
               <Image source={{ uri: blog.picture }} style={styles.image} />
               <View style={styles.headerContainer}>
           <Text style={styles.titleHeader}>{blog.title}</Text>
-              <TouchableOpacity onPress={() => handleHeartPress(blog)} style={styles.heartIconContainer}>
-                <Icon
-                  name={isFavorite(blog._id) ? "favorite" : "favorite-border"}
-                  size={24}
-                  color={isFavorite(blog._id) ? "#ff6347" : "#ccc"}
-                  style={styles.heartIcon}
-                />
-              </TouchableOpacity>
+              
+        <TouchableOpacity onPress={() => handleHeartPress(blog)} style={styles.heartIconContainer}>
+          <Icon
+            name="heart"
+            size={24}
+            color={isFavorite(blog._id) ? "#ff6347" : "#ccc"}
+            style={styles.heartIcon}
+          />
+        </TouchableOpacity>
             </View>
-              <Text style={styles.content}>{blog.content}</Text>
+              <Text 
+                style={styles.content}
+                numberOfLines={2}  
+                ellipsizeMode="tail"  
+              >{blog.content}</Text>
               <Text style={styles.createdAt}>
                 {new Date(blog.createdAt).toLocaleDateString()}
               </Text>
@@ -169,7 +175,7 @@ const styles = StyleSheet.create({
   content: {
     fontSize: 14,
     color: "#333",
-    marginBottom: 20,
+    marginBottom: 40,
   },
   createdAt: {
     position: "absolute",
