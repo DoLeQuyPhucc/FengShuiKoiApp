@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View, ActivityIndicator, SafeAreaView, TouchableHighlight, TouchableOpacity } from 'react-native';
 import { Avatar, Button, Card, Text, Title } from 'react-native-paper';
-import axiosInstance from '../api/axiosInstance';
+import axiosInstance, { clearAuthTokens } from '@/api/axiosInstance';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@/hooks/useNavigation';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -13,13 +13,23 @@ const ProfileScreen = () => {
   }
 
   const [userData, setUserData] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const navigation = useNavigation();
 
   useEffect(() => {
+    const getToken = async () => {
+      const token = await AsyncStorage.getItem('accessToken');
+      setAccessToken(token);
+    };
+    getToken();
+  }, []);
+
+  useEffect(() => {
     const fetchUserData = async () => {
       try {
+        setLoading(true);
         const response = await axiosInstance.get('/auth/me');
         setUserData(response.data.user);
       } catch (error) {
@@ -29,16 +39,19 @@ const ProfileScreen = () => {
       }
     };
 
-    fetchUserData();
-  }, []);
-
+    if (accessToken) {
+      fetchUserData();
+    }
+  }, [accessToken]);
+  
   const handleLogout = async () => {
     try {
+      await clearAuthTokens();
       await AsyncStorage.removeItem('accessToken');
       await AsyncStorage.removeItem('refreshToken');
       await AsyncStorage.removeItem('userId');
       await AsyncStorage.removeItem('userRole');
-  
+    
       // Navigate to the Welcome screen after logout
       navigation.navigate('WelcomeScreen');
     } catch (error) {
@@ -56,6 +69,10 @@ const ProfileScreen = () => {
 
   function handleOpenListFavorite() {
     navigation.navigate('ListFavoriteBlogScreen');
+  }
+
+  const handleMyProduct = () => {
+    navigation.navigate('MyProduct');
   }
 
   return (
@@ -111,7 +128,7 @@ const ProfileScreen = () => {
         
         <Card style={{ marginBottom: 16 }}>
           <Card.Content>
-            <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-between' }} onPress={handleMyProduct}>
               <Text>Sản phẩm của tôi</Text>
               
           <Icon

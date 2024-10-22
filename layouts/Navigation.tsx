@@ -27,6 +27,7 @@ import ProductsList from '@/screens/ProductsList';
 import CreateProduct from '@/screens/CreateProduct';
 import ProductDetail from '@/screens/ProductDetail';
 import CartScreen from '@/screens/CartScreen';
+import MyProductsScreen from '@/screens/MyProduct';
 const Stack = createStackNavigator<RootStackParamList>();
 
 
@@ -142,6 +143,7 @@ export default function Navigation() {
           <Stack.Screen name="OrderConfirmationScreen" component={OrderConfirmationScreen} options={{ headerShown: false }}  />
           <Stack.Screen name="CreateProduct" component={CreateProduct} options={{ headerShown: false }}  />
           <Stack.Screen name="ProductDetail" component={ProductDetail} options={{ headerShown: false }}  />
+          <Stack.Screen name="MyProduct" component={MyProductsScreen} options={{ headerShown: false }}  />
         </Stack.Navigator>
     </NavigationContainer>
   );

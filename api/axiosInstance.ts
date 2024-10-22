@@ -2,13 +2,17 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const axiosInstance = axios.create({
-  baseURL: "https://fengshuikoiapi.onrender.com/api/",
-  // baseURL: "http://localhost:5000/api/",
+  // baseURL: "https://fengshuikoiapi.onrender.com/api/",
+  baseURL: "http://localhost:5000/api/",
   // baseURL: "http://10.0.2.2:5000/api",
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+export const clearAuthTokens = async () => {
+  await AsyncStorage.multiRemove(["accessToken", "refreshToken", "userId"]);
+};
 
 // Add a request interceptor to include the access token in the headers
 axiosInstance.interceptors.request.use(
@@ -38,8 +42,15 @@ axiosInstance.interceptors.response.use(
       try {
         // Get the refresh token from storage
         const refreshToken = await AsyncStorage.getItem("refreshToken");
+
+        if (!refreshToken) {
+          // If no refresh token, clear everything and reject
+          await clearAuthTokens();
+          return Promise.reject(error);
+        }
+
         const response = await axios.post(
-          "https://fengshuikoiapi.onrender.com/api/auth/refresh-token",
+          `${axiosInstance.defaults.baseURL}auth/refresh-token`,
           { token: refreshToken }
         );
 
@@ -60,6 +71,8 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
         // Handle token refresh failure (e.g., redirect to login page)
+
+        await clearAuthTokens();
       }
     }
 
