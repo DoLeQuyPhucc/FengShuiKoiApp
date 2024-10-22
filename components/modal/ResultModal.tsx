@@ -9,55 +9,63 @@ import {
   ScrollView,
   ImageBackground,
 } from "react-native";
-import { RouteProp, useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "@/layouts/types/navigationTypes";
 import Colors from "@/constants/Colors";
 import api from "@/api/axiosInstance";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
 
-type ResultScreenRouteProp = RouteProp<RootStackParamList, "ResultScreen">;
-
-type Props = {
-  route: ResultScreenRouteProp;
-};
-
 type ElementType = 'Fire' | 'Water' | 'Wood' | 'Earth' | 'Metal';
 
 const elementImages: Record<ElementType, any> = {
-  Fire: require("../assets/images/fire_koi.png"),
-  Water: require("../assets/images/water_koi.png"),
-  Wood: require("../assets/images/wood_koi.png"),
-  Earth: require("../assets/images/earth_koi.png"),
-  Metal: require("../assets/images/metal_koi.png"),
+  Fire: require("../../assets/images/fire_koi.png"),
+  Water: require("../../assets/images/water_koi.png"),
+  Wood: require("../../assets/images/wood_koi.png"),
+  Earth: require("../../assets/images/earth_koi.png"),
+  Metal: require("../../assets/images/metal_koi.png"),
 };
 
-const fishTankImage = require("../assets/images/fish_tank.png");
+const fishTankImage = require("../../assets/images/fish_tank.png");
 
 const elementBackgroundImages: Record<ElementType, any> = {
-  Fire: require("../assets/images/lightred.png"),
-  Water: require("../assets/images/lightblue.png"),
-  Wood: require("../assets/images/lightgreen.png"),
-  Earth: require("../assets/images/lightbrown.png"),
-  Metal: require("../assets/images/lightmetal.png"),
+  Fire: require("../../assets/images/lightred.png"),
+  Water: require("../../assets/images/lightblue.png"),
+  Wood: require("../../assets/images/lightgreen.png"),
+  Earth: require("../../assets/images/lightbrown.png"),
+  Metal: require("../../assets/images/lightmetal.png"),
 };
 
-const ResultScreen: React.FC<Props> = ({ route }) => {
-  const { date } = route.params;
+const elementNames: Record<ElementType, string> = {
+  Fire: " Mệnh Hỏa",
+  Water: "Mệnh Thủy",
+  Wood: "Mệnh Mộc",
+  Earth: "Mệnh Thổ",
+  Metal: "Mệnh Kim",
+};
+
+type Props = {
+  date: string;
+  onClose: () => void;
+};
+
+const ResultModal: React.FC<Props> = ({ date, onClose }) => {
   const [element, setElement] = useState<ElementType | null>(null);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const navigation = useNavigation();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchElement = async () => {
       try {
         const response = await api.get(`/consultation/${date}`);
-        setData(response.data);
-        setElement(response.data.element as ElementType);
-        console.log(response.data);
+        if (response.data) {
+          setData(response.data);
+          setElement(response.data.element as ElementType);
+        } else {
+          setError("No data found for the given date.");
+        }
       } catch (error) {
         console.error("Error fetching element:", error);
+        setError("Error fetching data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -66,7 +74,7 @@ const ResultScreen: React.FC<Props> = ({ route }) => {
     fetchElement();
   }, [date]);
 
-  const backgroundImage = element ? elementBackgroundImages[element] : require("../assets/images/lightgreen.png");
+  const backgroundImage = element ? elementBackgroundImages[element] : require("../../assets/images/lightgreen.png");
 
   return (
     <ImageBackground source={backgroundImage} style={styles.background}>
@@ -74,9 +82,11 @@ const ResultScreen: React.FC<Props> = ({ route }) => {
         <View style={styles.overlay}>
           {loading ? (
             <ActivityIndicator size="large" color={Colors.darkBlueText} />
+          ) : error ? (
+            <Text style={styles.errorText}>{error}</Text>
           ) : (
             <>
-              <Text style={styles.title}>Your Element is...</Text>
+              <Text style={styles.title}>Mệnh của bạn</Text>
               <View style={styles.elementContainer}>
                 <View
                   style={{
@@ -106,7 +116,7 @@ const ResultScreen: React.FC<Props> = ({ route }) => {
                   {element === "Metal" && (
                     <MaterialCommunityIcon name="gold" size={40} color={"grey"} />
                   )}
-                  <Text style={styles.element}>{element}</Text>
+                  <Text style={styles.element}>{element ? elementNames[element] : ""}</Text>
                 </View>
                 <View
                   style={{
@@ -117,39 +127,38 @@ const ResultScreen: React.FC<Props> = ({ route }) => {
                   }}
                 >
                   <Text style={{ color: "#fff" }}>
-                    <Text style={{ fontWeight: "900" }}>Fish tank placement:</Text>{" "}
+                    <Text style={{ fontWeight: "900" }}>Hướng đặt hồ cá:</Text>{" "}
                     <Text style={{ fontWeight: "thin" }}>
-                      {" "}
-                      {data ? data.fishPondPlacement : ""}
+                      {" "}{data ? data.fishPondPlacement : ""}
                     </Text>
                   </Text>
                   <Text style={{ color: "#fff" }}>
-                    <Text style={{ fontWeight: "900" }}>Meaning:</Text>{" "}
+                    <Text style={{ fontWeight: "900" }}>Ý nghĩa:</Text>{" "}
                     <Text style={{ fontWeight: "thin" }}>
-                      {" "}
-                      {data ? data.meaning : ""}
+                      {" "}{data ? data.meaning : ""}
                     </Text>
                   </Text>
                   <Text style={{ color: "#fff" }}>
-                    <Text style={{ fontWeight: "900" }}>Limitations:</Text>{" "}
+                    <Text style={{ fontWeight: "900" }}>Hạn chế:</Text>{" "}
                     <Text style={{ fontWeight: "thin" }}>
-                      {" "}
-                      {data ? data.limitations : ""}
+                      {" "}{data ? data.limitations : ""}
                     </Text>
                   </Text>
                   <Text style={{ color: "#fff" }}>
-                    <Text style={{ fontWeight: "900" }}>Suitable Colors:</Text>{" "}
-                    {data
-                      ? data.suitableColors.map((element: any, index: any) => (
-                          <Text
-                            style={{ fontWeight: "thin", marginRight: 10 }}
-                            key={element}
-                          >
-                            {element}{" "}
-                            {index + 1 !== data.suitableColors.length && "| "}
-                          </Text>
-                        ))
-                      : ""}
+                    <Text style={{ fontWeight: "900" }}>Màu cá thích hợp:</Text>{" "}
+                    <View style={styles.colorsContainer}>
+                      {data && data.suitableColors && Array.isArray(data.suitableColors)
+                        ? data.suitableColors.map((color: string, index: number) => {
+                            const validColor = color.startsWith('#') ? color : `#${color}`;
+                            return (
+                              <View
+                                style={[styles.colorCircle, { backgroundColor: validColor }]}
+                                key={index}
+                              />
+                            );
+                          })
+                        : null}
+                    </View>
                   </Text>
                 </View>
                 {element && (
@@ -161,9 +170,9 @@ const ResultScreen: React.FC<Props> = ({ route }) => {
               </View>
               <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.goBack()}
+                onPress={onClose}
               >
-                <Text style={styles.backButtonText}>Back to Home</Text>
+                <Text style={styles.backButtonText}>Close</Text>
               </TouchableOpacity>
             </>
           )}
@@ -251,6 +260,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
+  colorsContainer: {
+    flexDirection: "row",
+    marginLeft: 10,
+  },
+  colorCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10, 
+    marginRight: 10, 
+  },
+  errorText: {
+    color: "red",
+    fontSize: 16,
+    textAlign: "center",
+  },
 });
 
-export default ResultScreen;
+export default ResultModal;

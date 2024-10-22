@@ -8,16 +8,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomBottomTab, { TabBarProps } from './BottomBar';
 import fonts from '@/config/fonts';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList } from './types/navigationTypes'; // Import the type
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { RootStackParamList } from './types/navigationTypes';
 import WelcomeScreen from '@/screens/WelcomeScreen';
 import LoginScreen from '@/screens/LoginScreen';
 import RegisterScreen from '@/screens/RegisterScreen';
 import HomeScreen from '@/screens/HomeScreen';
 import NotificationScreen from '@/screens/NotificationScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
-import ResultScreen from '@/screens/ResultScreen'; 
 import BlogScreen from '@/screens/Blog/BlogsScreen';
+import CreatePostScreen from '@/screens/Blog/CreatePostScreen';
 import ChatScreen from '@/screens/ChatScreen';
+import BlogDetailScreen from '@/screens/Blog/BlogDetailScreen';
+import FavoriteBlogScreen from '@/screens/FavoriteBlog/FavoriteBlogScreen';
+import CheckoutScreen from '@/screens/Order/Checkout';
+import OrderConfirmationScreen from '@/screens/Order/ConfirmOrder';
+import ProductsList from '@/screens/ProductsList';
+import CreateProduct from '@/screens/CreateProduct';
+import ProductDetail from '@/screens/ProductDetail';
+import CartScreen from '@/screens/CartScreen';
 const Stack = createStackNavigator<RootStackParamList>();
 
 
@@ -41,8 +50,26 @@ const tabBarProps: TabBarProps[] = [
     },
   },
   {
+    route: 'Products',
+    component: ProductsList,
+    tabBarLabel: 'Products',
+    tabBarIconProps: {
+      iconType: MaterialIcons,
+      iconName: 'category',
+    },
+  },
+  {
+    route: 'Cart',
+    component: CartScreen,
+    tabBarLabel: 'Cart',
+    tabBarIconProps: {
+      iconType: MaterialIcons,
+      iconName: 'shopping-cart',
+    },
+  },
+  {
     route: 'Notifications',
-    component: ChatScreen,
+    component: CheckoutScreen,
     tabBarLabel: 'Notifications',
     tabBarIconProps: {
       iconType: Ionicons,
@@ -108,7 +135,13 @@ export default function Navigation() {
           <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
           <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="ResultScreen" component={ResultScreen} options={{ headerShown: false }} /> 
+          <Stack.Screen name="CreatePostScreen" component={CreatePostScreen} options={{ headerShown: false }} /> 
+          <Stack.Screen name="BlogDetailScreen" component={BlogDetailScreen} options={{ headerShown: false }} /> 
+          <Stack.Screen name="ListFavoriteBlogScreen" component={FavoriteBlogScreen} options={{ headerShown: false }} /> 
+          <Stack.Screen name="CheckoutScreen" component={CheckoutScreen}  options={{ headerShown: false }}  />
+          <Stack.Screen name="OrderConfirmationScreen" component={OrderConfirmationScreen} options={{ headerShown: false }}  />
+          <Stack.Screen name="CreateProduct" component={CreateProduct} options={{ headerShown: false }}  />
+          <Stack.Screen name="ProductDetail" component={ProductDetail} options={{ headerShown: false }}  />
         </Stack.Navigator>
     </NavigationContainer>
   );

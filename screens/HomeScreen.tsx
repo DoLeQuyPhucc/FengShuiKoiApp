@@ -1,30 +1,42 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground, Dimensions, TouchableOpacity, Alert, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ImageBackground,
+  Dimensions,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  Animated,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import LinearGradient from 'react-native-linear-gradient';
 import Colors from '@/constants/Colors';
 import { RootStackParamList } from '@/layouts/types/navigationTypes';
+import ResultModal from '@/components/modal/ResultModal';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeScreen'>;
 
 function HomeScreen() {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0)); 
+
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
+  const handleDateChange = (selectedDate?: Date) => {
     const currentDate = selectedDate || date;
-    setShowDatePicker(Platform.OS === 'ios');
+    setShowDatePicker(false);
     setDate(currentDate);
   };
 
   const validateDate = () => {
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
     const year = date.getFullYear();
-
     if (year <= 1900) {
       Alert.alert('Invalid Date', 'Please enter a valid date.');
       return false;
@@ -35,8 +47,12 @@ function HomeScreen() {
 
   const handleResult = () => {
     if (validateDate()) {
-      const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      navigation.navigate('ResultScreen', { date: formattedDate });
+      setShowModal(true);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
     }
   };
 
@@ -51,28 +67,37 @@ function HomeScreen() {
           <Text style={[styles.title, { color: Colors.lightGreen }]}>FengShuiKoi</Text>
         </View>
 
-        <View style={styles.container}>
-          <Text style={[styles.label, { color: Colors.lightGreen }]}>Enter your date of birth</Text>
+        <View style={styles.formContainer}>
+          <Text style={[styles.label, { color: Colors.lightGreen, fontWeight: 'bold' }]}>
+            Nhập ngày sinh của bạn
+          </Text>
           <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
             <Text style={styles.dateButtonText}>{date.toDateString()}</Text>
           </TouchableOpacity>
-          {showDatePicker && (
-            <View style={styles.pickerContainer}>
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-                style={styles.dateTimePicker}
-                textColor={Colors.darkBlueText} // Works only for iOS
-              />
-            </View>
-          )}
+          <DateTimePickerModal
+            isVisible={showDatePicker}
+            mode="date"
+            onConfirm={handleDateChange}
+            onCancel={() => setShowDatePicker(false)}
+          />
           <TouchableOpacity style={styles.resultButton} onPress={handleResult}>
-            <Text style={styles.buttonText}>Result</Text>
+            <Text style={styles.buttonText}>Kết quả của bạn </Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>
+
+      <Modal
+        visible={showModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <Animated.View style={[styles.modalContent, { opacity: fadeAnim }]}>
+            <ResultModal date={date.toISOString().split('T')[0]} onClose={() => setShowModal(false)} />
+          </Animated.View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -91,11 +116,12 @@ const styles = StyleSheet.create({
   image: {
     resizeMode: 'cover',
   },
-  container: {
+  formContainer: {
     alignItems: 'center',
     padding: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderRadius: 10,
+    marginHorizontal: 30, // Add margin to both sides
   },
   titleContainer: {
     position: 'absolute',
@@ -120,15 +146,15 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     backgroundColor: Colors.lightGreen,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 15,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
   },
   dateButtonText: {
     color: '#FFFFFF',
@@ -144,9 +170,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
+    width: '100%', 
   },
   dateTimePicker: {
-    width: '100%',
+    width: '200%', 
   },
   resultButton: {
     backgroundColor: Colors.lightGreen,
@@ -164,6 +191,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '90%',
+    height: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
 });
 

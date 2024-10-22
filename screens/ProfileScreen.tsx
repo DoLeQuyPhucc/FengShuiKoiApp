@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, ActivityIndicator, SafeAreaView } from 'react-native';
+import { ScrollView, View, ActivityIndicator, SafeAreaView, TouchableHighlight, TouchableOpacity } from 'react-native';
 import { Avatar, Button, Card, Text, Title } from 'react-native-paper';
 import axiosInstance from '../api/axiosInstance';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@/hooks/useNavigation';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const ProfileScreen = () => {
   interface User {
@@ -51,6 +52,10 @@ const ProfileScreen = () => {
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
+  }
+
+  function handleOpenListFavorite() {
+    navigation.navigate('ListFavoriteBlogScreen');
   }
 
   return (
@@ -103,6 +108,33 @@ const ProfileScreen = () => {
           </Card.Content>
         </Card>
 
+        
+        <Card style={{ marginBottom: 16 }}>
+          <Card.Content>
+            <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text>Sản phẩm của tôi</Text>
+              
+          <Icon
+            name="chevron-forward-outline"
+            size={24}
+          />
+              
+            </TouchableOpacity>
+          </Card.Content>
+        </Card>
+
+        <Card style={{ marginBottom: 16 }}>
+          <Card.Content>
+            <TouchableOpacity onPress={handleOpenListFavorite} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text>Danh sách bài viết yêu thích</Text>
+          <Icon
+            name="chevron-forward-outline"
+            size={24}
+          />
+              
+            </TouchableOpacity>
+          </Card.Content>
+        </Card>
         {/* Action Buttons */}
         <View style={{ marginTop: 20 }}>
           <Button mode="contained" onPress={() => console.log('Edit Profile')} style={{ marginBottom: 16 }}>
