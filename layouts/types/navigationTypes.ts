@@ -1,3 +1,4 @@
+import { Product } from "@/screens/ProductsList";
 import { Blog } from "@/shared/Interface/Blog";
 import { Order } from "@/shared/Interface/Order";
 
@@ -12,7 +13,6 @@ export type RootStackParamList = {
   ResultScreen: { date: string };
   AuthLoadingScreen: undefined;
   SearchResults: { query: string };
-  ProductDetail: undefined;
   PackageDetail: { id: string };
   CartScreen: undefined;
   ProfileScreen: undefined;
@@ -30,6 +30,8 @@ export type RootStackParamList = {
   ListFavoriteBlogScreen: undefined;
   CheckoutScreen: undefined;
   OrderConfirmationScreen: { order: Order };
+  CreateProduct: { product: Product } | undefined;
+  ProductDetail: { productId: string };
 };
 
 export type BottomTabParamList = {
@@ -38,4 +40,6 @@ export type BottomTabParamList = {
   Profile: undefined;
   Notifications: undefined;
   Blogs: undefined;
+  Products: undefined;
+  Cart: undefined;
 };

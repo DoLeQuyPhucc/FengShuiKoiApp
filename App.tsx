@@ -5,6 +5,7 @@ import fonts from "./config/fonts";
 import Toast from "react-native-toast-message";
 import { SocketProvider } from "./context/SocketContext";
 import { FavoriteProvider } from "./context/FavouriteBlogContext";
+import { CartProvider } from "./context/CartContext";
 
 export default function App() {
   let [fontsLoaded] = useFonts(fonts);
@@ -15,10 +16,12 @@ export default function App() {
   return (
     <>
       <SocketProvider>
-        <FavoriteProvider>
-          <Navigation />
-          <Toast />
-        </FavoriteProvider>
+        <CartProvider>
+          <FavoriteProvider>
+            <Navigation />
+            <Toast />
+          </FavoriteProvider>
+        </CartProvider>
       </SocketProvider>
     </>
   );
