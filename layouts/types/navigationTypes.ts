@@ -32,6 +32,7 @@ export type RootStackParamList = {
   OrderConfirmationScreen: { order: Order };
   CreateProduct: { product: Product } | undefined;
   ProductDetail: { productId: string };
+  MyProduct: undefined;
 };
 
 export type BottomTabParamList = {
