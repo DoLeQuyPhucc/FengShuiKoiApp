@@ -75,6 +75,10 @@ const ProfileScreen = () => {
     navigation.navigate('MyProduct');
   }
 
+  const handleOpenChat = () => {
+    navigation.navigate('ChatScreen');
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16, backgroundColor: 'white' }}>
@@ -152,6 +156,22 @@ const ProfileScreen = () => {
             </TouchableOpacity>
           </Card.Content>
         </Card>
+
+        <Card style={{ marginBottom: 16 }}>
+          <Card.Content>
+            <TouchableOpacity 
+              style={{ flexDirection: 'row', justifyContent: 'space-between' }} 
+              onPress={handleOpenChat}
+            >
+              <Text>Trung tâm tư vấn</Text>
+              <Icon
+                name="chatbubbles-outline"
+                size={24}
+              />
+            </TouchableOpacity>
+          </Card.Content>
+        </Card>
+        
         {/* Action Buttons */}
         <View style={{ marginTop: 20 }}>
           <Button mode="contained" onPress={() => console.log('Edit Profile')} style={{ marginBottom: 16 }}>

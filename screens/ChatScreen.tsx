@@ -1,152 +1,295 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, SafeAreaView } from 'react-native';
-import { useGetMessages } from '@/hooks/useGetMessages';
-import { useSendMessage } from '@/hooks/useSendMessage';
-import { useSocketMessage } from '@/hooks/useSocketMessage';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import {
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { Text, Card } from 'react-native-paper';
+import io from 'socket.io-client';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axiosInstance from '@/api/axiosInstance';
 
 interface Message {
   _id: string;
   senderId: string;
-  receiverId: string;
   message: string;
-  createdAt: string;
+  timestamp: Date;
 }
 
-const ChatScreen: React.FC = () => {
-  const chatUserId = '6707fe5445f0dc6fdde0b347'; // Hardcoded receiver userId
-  const [newMessage, setNewMessage] = useState<string>('');
+interface QueuePosition {
+  position: number;
+  estimatedWaitTime: number;
+}
+
+const ChatScreen = () => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [inQueue, setInQueue] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  const [queuePosition, setQueuePosition] = useState<QueuePosition | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [adminId, setAdminId] = useState<string>("6707fe5445f0dc6fdde0b347"); // Admin ID từ server
+  const socketRef = useRef<any>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const inputRef = useRef<TextInput>(null);
 
-  // Fetch initial messages
-  const fetchedMessages = useGetMessages(chatUserId);
+  const scrollToBottom = useCallback((animated = true) => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated });
+    }, 100);
+  }, []);
 
-  // Sync initial messages when fetched
   useEffect(() => {
-    setMessages(fetchedMessages);
-  }, [fetchedMessages]);
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        scrollToBottom();
+      }
+    );
 
-  // Socket message listener
-  useSocketMessage((receivedMessage: Message) => {
-    setMessages((prevMessages) => [...prevMessages, receivedMessage]);
-  });
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        scrollToBottom();
+      }
+    );
 
-  // Sending message hook
-  const sendMessage = useSendMessage(chatUserId);
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
-  const handleSend = () => {
-    if (newMessage.trim()) {
-      sendMessage(newMessage).then((sentMessage) => {
-        setMessages((prevMessages) => [...prevMessages, sentMessage]); // Add sent message to local state
-        setNewMessage(''); // Clear input after sending
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (!inQueue && isConnected) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 500);
+    }
+  }, [inQueue, isConnected]);
+
+  useEffect(() => {
+    const initializeChat = async () => {
+      const storedUserId = await AsyncStorage.getItem('userId');
+      setUserId(storedUserId);
+
+      socketRef.current = io('http://localhost:5000', {
+        query: { userId: storedUserId },
       });
+
+      socketRef.current.on('connect', () => {
+        setIsConnected(true);
+        socketRef.current.emit('joinQueue', { userId: storedUserId });
+      });
+
+      socketRef.current.on('queuePosition', (data: QueuePosition) => {
+        setInQueue(true);
+        setQueuePosition(data);
+      });
+
+      socketRef.current.on('chatStart', (data: { sessionId: string }) => {
+        setInQueue(false);
+        setChatSessionId(data.sessionId);
+        loadPreviousMessages();
+      });
+
+      socketRef.current.on('queueTimeout', () => {
+        setInQueue(false);
+        // Hiển thị thông báo yêu cầu quay lại sau
+        Alert.alert(
+          'Thông báo',
+          'Hiện tại không có admin trực. Vui lòng quay lại sau.',
+          [{ text: 'OK' }]
+        );
+      });
+
+      socketRef.current.on('newMessage', (message: Message) => {
+        // Chỉ thêm tin nhắn mới nếu đã load xong tin nhắn cũ
+        if (!isLoadingMessages) {
+          setMessages(prev => [...prev, message]);
+        }
+      });
+
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+        }
+      };
+    };
+
+    initializeChat();
+  }, []);
+
+  const loadPreviousMessages = async () => {
+    setIsLoadingMessages(true);
+    try {
+      const response = await axiosInstance.get(`/messages/get/${adminId}`);
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    } finally {
+      setIsLoadingMessages(false);
     }
   };
 
-  const renderMessageItem = ({ item }: { item: Message }) => (
-    <View
-      style={[
-        styles.messageBubble,
-        item.senderId === chatUserId ? styles.receivedBubble : styles.sentBubble,
-      ]}
-    >
-      <Text style={styles.messageText}>{item.message}</Text>
-      <Text style={styles.messageTime}>{new Date(item.createdAt).toLocaleTimeString()}</Text>
-    </View>
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || !adminId) return;
+
+    try {
+      const tempMessage = {
+        _id: Date.now().toString(),
+        senderId: userId as string,
+        message: inputMessage,
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, tempMessage]);
+
+      await axiosInstance.post(`/messages/send/${adminId}`, {
+        message: inputMessage,
+      });
+
+      if (chatSessionId) {
+        socketRef.current.emit('sendMessage', {
+          sessionId: chatSessionId,
+          senderId: userId,
+          message: inputMessage,
+          timestamp: new Date(),
+        });
+      }
+
+      setInputMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
+  const renderQueueStatus = () => (
+    <Card style={{ margin: 16, padding: 16 }}>
+      <Text style={{ textAlign: 'center', fontSize: 16 }}>
+        Bạn đang trong hàng đợi
+      </Text>
+      {queuePosition && (
+        <>
+          <Text style={{ textAlign: 'center', marginTop: 8 }}>
+            Vị trí: {queuePosition.position}
+          </Text>
+          <Text style={{ textAlign: 'center', marginTop: 4 }}>
+            Thời gian đợi ước tính: {queuePosition.estimatedWaitTime} phút
+          </Text>
+        </>
+      )}
+    </Card>
   );
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <View style={styles.container}>
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item._id}
-        renderItem={renderMessageItem}
-        contentContainerStyle={styles.messagesContainer}
-      />
-      <View style={styles.inputContainer}>
-        <TextInput
-          value={newMessage}
-          onChangeText={setNewMessage}
-          placeholder="Type your message..."
-          style={styles.textInput}
-        />
-        <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
-          <Text style={styles.sendButtonText}>Send</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <View style={{ flex: 1 }}>
+          {!isConnected ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="large" />
+              <Text style={{ marginTop: 16 }}>Đang kết nối...</Text>
+            </View>
+          ) : inQueue ? (
+            renderQueueStatus()
+          ) : (
+            <>
+              <ScrollView
+                ref={scrollViewRef}
+                style={{ flex: 1, padding: 16 }}
+                onContentSizeChange={() => scrollToBottom(false)}
+                onLayout={() => scrollToBottom(false)}
+                keyboardShouldPersistTaps="handled"
+              >
+                {messages.map((msg, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      alignItems: msg.senderId === userId ? 'flex-end' : 'flex-start',
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Card
+                      style={{
+                        maxWidth: '80%',
+                        backgroundColor: msg.senderId === userId ? '#007AFF' : '#E5E5EA',
+                      }}
+                    >
+                      <Card.Content>
+                        <Text style={{ color: msg.senderId === userId ? 'white' : 'black' }}>
+                          {msg.message}
+                        </Text>
+                      </Card.Content>
+                    </Card>
+                  </View>
+                ))}
+              </ScrollView>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  padding: 16,
+                  borderTopWidth: 1,
+                  borderTopColor: '#E5E5EA',
+                  backgroundColor: 'white',
+                }}
+              >
+                <TextInput
+                  ref={inputRef}
+                  style={{
+                    flex: 1,
+                    borderWidth: 1,
+                    borderColor: '#E5E5EA',
+                    borderRadius: 20,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    marginRight: 8,
+                    backgroundColor: 'white',
+                  }}
+                  value={inputMessage}
+                  onChangeText={setInputMessage}
+                  placeholder="Nhập tin nhắn..."
+                  onFocus={() => scrollToBottom()}
+                />
+                <TouchableOpacity
+                  onPress={sendMessage}
+                  style={{
+                    backgroundColor: '#007AFF',
+                    borderRadius: 20,
+                    padding: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: 60,
+                  }}
+                >
+                  <Text style={{ color: 'white' }}>Gửi</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f0f5',
-  },
-  messagesContainer: {
-    paddingHorizontal: 10,
-    paddingTop: 10,
-    paddingBottom: 80,
-  },
-  messageBubble: {
-    padding: 10,
-    marginVertical: 5,
-    borderRadius: 15,
-    maxWidth: '80%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  receivedBubble: {
-    backgroundColor: '#e6e6e6',
-    alignSelf: 'flex-start',
-  },
-  sentBubble: {
-    backgroundColor: '#007bff',
-    alignSelf: 'flex-end',
-  },
-  messageText: {
-    color: '#fff',
-  },
-  messageTime: {
-    fontSize: 10,
-    color: '#ccc',
-    textAlign: 'right',
-    marginTop: 5,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    backgroundColor: '#fff',
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-  },
-  textInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 20,
-    padding: 10,
-    marginRight: 10,
-    backgroundColor: '#f9f9f9',
-  },
-  sendButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-});
 
 export default ChatScreen;

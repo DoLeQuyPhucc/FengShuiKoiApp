@@ -144,6 +144,7 @@ export default function Navigation() {
           <Stack.Screen name="CreateProduct" component={CreateProduct} options={{ headerShown: false }}  />
           <Stack.Screen name="ProductDetail" component={ProductDetail} options={{ headerShown: false }}  />
           <Stack.Screen name="MyProduct" component={MyProductsScreen} options={{ headerShown: false }}  />
+          <Stack.Screen name="ChatScreen" component={ChatScreen} options={{ headerShown: false, title: 'Tư vấn' }}  />
         </Stack.Navigator>
     </NavigationContainer>
   );
