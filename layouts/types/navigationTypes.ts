@@ -33,6 +33,7 @@ export type RootStackParamList = {
   CreateProduct: { product: Product } | undefined;
   ProductDetail: { productId: string };
   MyProduct: undefined;
+  ChatScreen: undefined;
 };
 
 export type BottomTabParamList = {
