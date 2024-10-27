@@ -18,6 +18,7 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import { Product } from './ProductsList';
 import { useNavigation } from '@/hooks/useNavigation';
 import { useCart } from '@/context/CartContext';
+import ReportModal from '@/components/ReportModal';
 
 interface Review {
   _id: string;
@@ -46,8 +47,33 @@ const ProductDetail = () => {
   const [userRating, setUserRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { addToCart } = useCart();
+
+  const handleReport = async (reason: string, description: string) => {
+    if (!product) return;
+    
+    setIsSubmitting(true);
+    try {
+      await axiosInstance.post('/report', {
+        productId: product._id,
+        reason,
+        description
+      });
+      
+      Alert.alert('Success', 'Report submitted successfully');
+      setIsReportModalVisible(false);
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to submit report'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleAddToCart = () => {
     if (product) {
@@ -166,9 +192,21 @@ const ProductDetail = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-          <Icon name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+            <Icon name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          
+          {/* Thêm nút Report */}
+          {userId !== product?.owner && (
+            <TouchableOpacity 
+              style={styles.reportButton}
+              onPress={() => setIsReportModalVisible(true)}
+            >
+              <Icon name="flag-outline" size={24} color="#FF3B30" />
+            </TouchableOpacity>
+          )}
+        </View>
 
         <Image
           source={{ uri: product.image }}
@@ -242,6 +280,13 @@ const ProductDetail = () => {
             <Icon name="cart" size={24} color="#fff" style={styles.cartIcon} />
             <Text style={styles.addToCartButtonText}>Add to Cart</Text>
           </TouchableOpacity>
+
+          <ReportModal
+            isVisible={isReportModalVisible}
+            onClose={() => setIsReportModalVisible(false)}
+            onSubmit={handleReport}
+            loading={isSubmitting}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -369,11 +414,32 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 8,
   },
-  backButton: {
+  header: {
     position: 'absolute',
     top: 40,
-    left: 16,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
     zIndex: 1,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reportButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   addToCartButton: {
     backgroundColor: 'red',
