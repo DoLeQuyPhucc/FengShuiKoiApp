@@ -16,6 +16,19 @@ import { useNavigation } from '@/hooks/useNavigation';
 const CartScreen = () => {
   const { items, removeFromCart, updateQuantity, totalAmount } = useCart();
   const navigation = useNavigation();
+  const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
+
+  const handleRemoveFromCart = (productId: string) => {
+    Alert.alert(
+      'Remove Item',
+      'Do you want to remove this item from cart?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => removeFromCart(productId) }
+      ]
+    );
+
+  }
 
   const handleQuantityChange = (productId: string, currentQuantity: number, increment: boolean) => {
     const newQuantity = increment ? currentQuantity + 1 : currentQuantity - 1;
@@ -37,7 +50,12 @@ const CartScreen = () => {
 
   const handleCheckout = () => {
     // Implement checkout logic here
-    Alert.alert('Success', 'Proceed to checkout');
+    // Alert.alert('Success', 'Proceed to checkout');
+
+    setSelectedItems(items.map((item) => item.productId));
+
+  // console.log(items);
+    navigation.navigate('CheckoutScreen', { items: items });
   };
 
   if (items.length === 0) {
@@ -94,7 +112,7 @@ const CartScreen = () => {
             </View>
             
             <TouchableOpacity
-              onPress={() => removeFromCart(item.productId)}
+              onPress={() => handleRemoveFromCart(item.productId)}
               style={styles.removeButton}
             >
               <Icon name="trash-outline" size={24} color="#FF3B30" />

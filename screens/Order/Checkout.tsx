@@ -3,7 +3,7 @@ import { Order } from '@/shared/Interface/Order';
 import { Product } from '@/shared/Interface/Product';
 import { RouteProp } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, SafeAreaView, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from "@/hooks/useNavigation";
 
 type CheckoutScreenRouteProp = RouteProp<
@@ -15,25 +15,16 @@ type Props = {
   route: CheckoutScreenRouteProp;
 };
 
-// const CheckoutScreen: React.FC<Props> = ({ route }) => {
-    
-const CheckoutScreen: React.FC<Props> = () => {
+const CheckoutScreen: React.FC<Props> = ({ route }) => {
 
   const navigation = useNavigation();
 
-  const product: Product = {
-    name: "Smart Watch Pro 2024",
-    price: 250,
-    quantity: 1,
-    description: "A next-gen smartwatch with advanced health monitoring features.",
-    address: "123 Elm Street, Springfield, USA",
-    rating: 4.5,
-    comment: "Amazing features, great battery life!",
-    isSelled: false
-  };
+  const items = route.params.items;
   
   const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
+
+  const totalAmount = items.reduce((total, item) => total + item.price, 0);
 
   const handleCheckout = () => {
     if (!address) {
@@ -42,9 +33,8 @@ const CheckoutScreen: React.FC<Props> = () => {
     }
 
     const order: Order = {
-        name: product.name,
-        price: product.price,
-        quantity: product.quantity,
+        items: items,
+        totalPrice: totalAmount,
         address,
         comment,
         isSelled: true
@@ -52,28 +42,33 @@ const CheckoutScreen: React.FC<Props> = () => {
 
     navigation.navigate('OrderConfirmationScreen', { order });
 
-    console.log("Order Confirmed", {
-      name: product.name,
-      price: product.price,
-      quantity: product.quantity,
-      address,
-      comment,
-      isSelled: true
-    });
+    // console.log("Order Confirmed", {
+    //   name: product.name,
+    //   price: product.price,
+    //   quantity: product.quantity,
+    //   address,
+    //   comment,
+    //   isSelled: true
+    // });
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Checkout</Text>
+    <SafeAreaView style={styles.safeArea}>
       
-      <View style={styles.productDetail}>
-        <Text style={styles.productText}>Product Name: {product.name}</Text>
-        <Text style={styles.productText}>Price: ${product.price}</Text>
-        <Text style={styles.productText}>Quantity: {product.quantity}</Text>
-        <Text style={styles.productText}>Description: {product.description}</Text>
-        <Text style={styles.productText}>Rating: {product.rating}</Text>
-      </View>
-      
+      <ScrollView style={styles.container}>
+        {items.map((item) => (
+          <View key={item.productId} style={styles.cartItem}>
+            <Image source={{ uri: item.image }} style={styles.itemImage} />
+            
+            <View style={styles.itemDetails}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.itemPrice}>${item.price.toLocaleString()}</Text>
+              <Text style={styles.quantityText}>Quantity: {item.quantity}</Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
       <TextInput
         style={styles.input}
         placeholder="Enter your shipping address"
@@ -87,16 +82,134 @@ const CheckoutScreen: React.FC<Props> = () => {
         value={comment}
         onChangeText={setComment}
       />
-
-      <Button title="Confirm and Pay" onPress={handleCheckout} />
-    </ScrollView>
+      
+      <View style={styles.footer}>
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalLabel}>Total:</Text>
+          <Text style={styles.totalAmount}>${totalAmount.toLocaleString()}</Text>
+        </View>
+        
+        <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
+          <Text style={styles.checkoutButtonText}>Confirm!</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 };
 
+
+
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
+  },
   container: {
     flex: 1,
-    padding: 20,
+  },
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  cartItem: {
+    flexDirection: 'row',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  itemDetails: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  itemPrice: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  quantityButton: {
+    padding: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 4,
+  },
+  quantityText: {
+    fontSize: 16,
+  },
+  removeButton: {
+    padding: 8,
+  },
+  footer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+    backgroundColor: '#fff',
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  totalLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  totalAmount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  checkoutButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  checkoutButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#999',
+    marginVertical: 16,
+  },
+  continueButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 8,
+  },
+  continueButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   title: {
     fontSize: 24,

@@ -1,13 +1,9 @@
+import { CartItem } from "@/context/CartContext";
+
 export interface Order {
-    name: string;
-    price: number;
-    quantity: number;
-    address: string;
-    comment: string;
-    isSelled: boolean;
-    _id?: string;
-    userId?: string;
-    productId?: string;
-    createdAt?: string;
-    updatedAt?: string;
+  items: CartItem[];
+  totalPrice: number;
+  address: string;
+  comment: string;
+  isSelled: boolean;
 }
