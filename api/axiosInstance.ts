@@ -2,8 +2,8 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const axiosInstance = axios.create({
-  baseURL: "https://fengshuikoiapi.onrender.com/api",
-  // baseURL: "http://localhost:5000/api/",
+  // baseURL: "https://fengshuikoiapi.onrender.com/api",
+  baseURL: "http://localhost:5000/api/",
   // baseURL: "http://10.0.2.2:5000/api",
   headers: {
     "Content-Type": "application/json",
