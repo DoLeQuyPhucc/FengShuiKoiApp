@@ -5,18 +5,16 @@ const useUserId = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUserId = async () => {
+    const getUserId = async () => {
       try {
-        const id = await AsyncStorage.getItem("userId");
-        if (id !== null) {
-          setUserId(id);
-        }
+        const storedUserId = await AsyncStorage.getItem("userId");
+        setUserId(storedUserId);
       } catch (error) {
-        console.error("Failed to retrieve user ID:", error);
+        console.error("Error getting userId:", error);
       }
     };
 
-    fetchUserId();
+    getUserId();
   }, []);
 
   return userId;
