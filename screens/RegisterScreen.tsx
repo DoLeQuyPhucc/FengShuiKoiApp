@@ -15,6 +15,7 @@ import Font from "@/constants/Font";
 import AppTextInput from "@/components/AppTextInput";
 import { useNavigation } from "@/hooks/useNavigation";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
+import axiosInstance from "@/api/axiosInstance";
 
 const RegisterScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -22,19 +23,47 @@ const RegisterScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [userName, setUserName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [name, setName] = useState('');
+  const [birthYear, setBirthYear] = useState('');
+  const [gender, setGender] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const resetForm = () => {
     setEmail('');
     setPassword('');
     setConfirmPassword('');
-    setFirstName('');
-    setLastName('');
-    setUserName('');
-    setPhoneNumber('');
+    setName('');
+    setBirthYear('');
+    setGender('');
+  };
+
+  const registerUser = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await axiosInstance.post('/auth/register', {
+        name,
+        email,
+        password,
+        birthYear,
+        gender
+      });
+
+      if (response.status === 200) {
+        Alert.alert('Success', 'Account created successfully');
+        resetForm();
+        navigation.navigate('LoginScreen');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to create account');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,21 +73,20 @@ const RegisterScreen: React.FC = () => {
           <View style={{ alignItems: "center" }}>
             <Text style={styles.header}>Create account</Text>
             <Text style={styles.subHeader}>
-              Create an account so you can explore all the existing jobs
+              Create an account so you can explore all Fish Koi
             </Text>
           </View>
           <View style={{ marginVertical: Spacing * 3 }}>
-            <AppTextInput placeholder="First Name" value={firstName} onChangeText={setFirstName} />
-            <AppTextInput placeholder="Last Name" value={lastName} onChangeText={setLastName} />
-            <AppTextInput placeholder="User Name" value={userName} onChangeText={setUserName} />
+          <AppTextInput placeholder="Name" value={name} onChangeText={setName} />
             <AppTextInput placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
-            <AppTextInput placeholder="Phone Number" value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" />
             <AppTextInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
             <AppTextInput placeholder="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+            <AppTextInput placeholder="Birth Year" value={birthYear} onChangeText={setBirthYear} keyboardType="numeric" />
+            <AppTextInput placeholder="Gender" value={gender} onChangeText={setGender} />
           </View>
 
-          <TouchableOpacity style={styles.signUpButton}>
-            <Text style={styles.signUpButtonText}>Sign up</Text>
+          <TouchableOpacity style={styles.signUpButton} onPress={registerUser} disabled={loading}>
+            <Text style={styles.signUpButtonText}>{loading ? 'Signing up...' : 'Sign up'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => navigation.navigate("LoginScreen")} style={{ padding: Spacing }}>

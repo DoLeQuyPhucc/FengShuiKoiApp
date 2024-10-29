@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from '@/api/axiosInstance';
 
 interface Message {
+  createdAt: Date;
   _id: string;
   senderId: string;
   message: string;
@@ -100,7 +101,7 @@ const ChatScreen = () => {
         setInQueue(false);
       }
 
-      socketRef.current = io('https://fengshuikoiapi.onrender.com', {
+      socketRef.current = io('http://10.0.2.2:5000', {
         query: { 
           userId: storedUserId,
           sessionId: storedSessionId
@@ -247,7 +248,7 @@ const ChatScreen = () => {
 
     try {
       // Optimistically add message to UI
-      setMessages(prev => [...prev, messageData]);
+      setMessages(prev => [...prev, { ...messageData, createdAt: new Date() }]);
       setInputMessage('');
 
       // Send to server
@@ -270,6 +271,34 @@ const ChatScreen = () => {
     }
   };
 
+  const formatMessageDate = (timestamp: Date | { $date: string }) => {
+    const messageDate = (timestamp as { $date: string }).$date ? new Date((timestamp as { $date: string }).$date) : new Date(timestamp as Date);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (messageDate.toDateString() === today.toDateString()) {
+      return 'Hôm nay';
+    } else if (messageDate.toDateString() === yesterday.toDateString()) {
+      return 'Hôm qua';
+    } else {
+      return messageDate.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
+  };
+  
+  const formatMessageTime = (timestamp: Date | { $date: string }) => {
+    const date = (timestamp as { $date: string }).$date ? new Date((timestamp as { $date: string }).$date) : new Date(timestamp as Date);
+    return date.toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+  
+
   const renderQueueStatus = () => (
     <Card style={styles.queueCard}>
       <Text style={styles.queueText}>Bạn đang trong hàng đợi</Text>
@@ -281,6 +310,8 @@ const ChatScreen = () => {
       )}
     </Card>
   );
+
+  
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -314,28 +345,55 @@ const ChatScreen = () => {
                 onLayout={() => scrollToBottom(false)}
                 keyboardShouldPersistTaps="handled"
               >
-                {messages.map((msg, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.messageContainer,
-                      { alignItems: msg.senderId === userId ? 'flex-end' : 'flex-start' },
-                    ]}
-                  >
-                    <Card
+                {messages.reduce((acc: JSX.Element[], msg: Message, index: number) => {
+                  const showDate = index === 0 || 
+                  formatMessageDate(msg.createdAt || msg.timestamp) !== 
+                  formatMessageDate(messages[index - 1].createdAt || messages[index - 1].timestamp);
+                
+                  if (showDate) {
+                    acc.push(
+                      <View key={`date-${index}`} style={styles.dateContainer}>
+                        <Text style={styles.dateText}>
+                          {formatMessageDate(msg.createdAt || msg.timestamp)}
+                        </Text>
+                      </View>
+                    );
+                  }
+                  
+                  acc.push(
+                    <View
+                      key={index}
                       style={[
-                        styles.messageCard,
-                        { backgroundColor: msg.senderId === userId ? '#007AFF' : '#E5E5EA' },
+                        styles.messageContainer,
+                        { alignItems: msg.senderId === userId ? 'flex-end' : 'flex-start' },
                       ]}
                     >
-                      <Card.Content>
-                        <Text style={{ color: msg.senderId === userId ? 'white' : 'black' }}>
-                          {msg.message}
-                        </Text>
-                      </Card.Content>
-                    </Card>
-                  </View>
-                ))}
+                      <Card
+                        style={[
+                          styles.messageCard,
+                          { backgroundColor: msg.senderId === userId ? '#007AFF' : '#E5E5EA' },
+                        ]}
+                      >
+                        <Card.Content>
+                          <Text style={{ 
+                            color: msg.senderId === userId ? 'white' : 'black',
+                            marginBottom: 4
+                          }}>
+                            {msg.message}
+                          </Text>
+                          <Text style={{ 
+                            fontSize: 10,
+                            color: msg.senderId === userId ? 'rgba(255,255,255,0.7)' : 'gray',
+                            alignSelf: 'flex-end'
+                          }}>
+                            {formatMessageTime(msg.createdAt || msg.timestamp)}
+                          </Text>
+                        </Card.Content>
+                      </Card>
+                    </View>
+                  );
+                  return acc;
+                }, [])}
               </ScrollView>
               <View style={styles.inputContainer}>
                 <TextInput
@@ -426,6 +484,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 25,
     marginLeft: 8,
+  },
+  dateContainer: {
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  dateText: {
+    fontSize: 12,
+    color: 'gray',
+    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
 });
 

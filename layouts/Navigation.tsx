@@ -68,15 +68,6 @@ const tabBarProps: TabBarProps[] = [
       iconName: 'shopping-cart',
     },
   },
-  // {
-  //   route: 'Notifications',
-  //   component: CheckoutScreen,
-  //   tabBarLabel: 'Notifications',
-  //   tabBarIconProps: {
-  //     iconType: Ionicons,
-  //     iconName: 'notifications',
-  //   },
-  // },
   {
     route: 'Profile',
     component: ProfileScreen,
