@@ -125,16 +125,16 @@ export default function App() {
               <Text style={styles.createdAt}>
                 {new Date(blog.createdAt).toLocaleDateString()}
               </Text>
-              {renderOptionsMenu(blog)}
+              {/* {renderOptionsMenu(blog)} */}
           </TouchableOpacity>
             </View>
         ))}
       </ScrollView>
 
       {/* Nút "+" */}
-      <TouchableOpacity style={styles.fab} onPress={handleCreatePost}>
+      {/* <TouchableOpacity style={styles.fab} onPress={handleCreatePost}>
         <Icon name="add" size={24} color="white" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }

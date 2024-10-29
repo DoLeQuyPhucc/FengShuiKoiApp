@@ -1,3 +1,4 @@
+import { CartItem } from "@/context/CartContext";
 import { Product } from "@/screens/ProductsList";
 import { Blog } from "@/shared/Interface/Blog";
 import { Order } from "@/shared/Interface/Order";
@@ -28,7 +29,7 @@ export type RootStackParamList = {
   CreatePostScreen: undefined | { blog: Blog };
   BlogDetailScreen: { blog: Blog };
   ListFavoriteBlogScreen: undefined;
-  CheckoutScreen: undefined;
+  CheckoutScreen: { items: CartItem[] };
   OrderConfirmationScreen: { order: Order };
   CreateProduct: { product: Product } | undefined;
   ProductDetail: { productId: string };
