@@ -101,7 +101,7 @@ const ChatScreen = () => {
         setInQueue(false);
       }
 
-      socketRef.current = io('http://localhost:5000', {
+      socketRef.current = io('http://10.0.2.2:5000', {
         query: { 
           userId: storedUserId,
           sessionId: storedSessionId

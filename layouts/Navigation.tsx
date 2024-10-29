@@ -69,15 +69,6 @@ const tabBarProps: TabBarProps[] = [
     },
   },
   {
-    route: 'Notifications',
-    component: CheckoutScreen,
-    tabBarLabel: 'Notifications',
-    tabBarIconProps: {
-      iconType: Ionicons,
-      iconName: 'notifications',
-    },
-  },
-  {
     route: 'Profile',
     component: ProfileScreen,
     tabBarLabel: 'Profile',
