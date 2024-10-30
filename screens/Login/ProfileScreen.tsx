@@ -79,6 +79,10 @@ const ProfileScreen = () => {
     navigation.navigate('ChatScreen');
   };
 
+  const handlePackage = () => {
+    navigation.navigate('MyPackageScreen');
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16, backgroundColor: 'white' }}>
@@ -128,7 +132,20 @@ const ProfileScreen = () => {
             </View>
           </Card.Content>
         </Card>
-
+        
+        <Card style={{ marginBottom: 16 }}>
+          <Card.Content>
+            <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-between' }} onPress={handlePackage}>
+              <Text>Quản lí gói đăng bài</Text>
+              
+          <Icon
+            name="chevron-forward-outline"
+            size={24}
+          />
+              
+            </TouchableOpacity>
+          </Card.Content>
+        </Card>
         
         <Card style={{ marginBottom: 16 }}>
           <Card.Content>

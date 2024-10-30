@@ -11,11 +11,11 @@ import { Ionicons } from '@expo/vector-icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { RootStackParamList } from './types/navigationTypes';
 import WelcomeScreen from '@/screens/WelcomeScreen';
-import LoginScreen from '@/screens/LoginScreen';
-import RegisterScreen from '@/screens/RegisterScreen';
+import LoginScreen from '@/screens/Login/LoginScreen';
+import RegisterScreen from '@/screens/Login/RegisterScreen';
 import HomeScreen from '@/screens/HomeScreen';
 import NotificationScreen from '@/screens/NotificationScreen';
-import ProfileScreen from '@/screens/ProfileScreen';
+import ProfileScreen from '@/screens/Login/ProfileScreen';
 import BlogScreen from '@/screens/Blog/BlogsScreen';
 import CreatePostScreen from '@/screens/Blog/CreatePostScreen';
 import ChatScreen from '@/screens/ChatScreen';
@@ -23,11 +23,13 @@ import BlogDetailScreen from '@/screens/Blog/BlogDetailScreen';
 import FavoriteBlogScreen from '@/screens/FavoriteBlog/FavoriteBlogScreen';
 import CheckoutScreen from '@/screens/Order/Checkout';
 import OrderConfirmationScreen from '@/screens/Order/ConfirmOrder';
-import ProductsList from '@/screens/ProductsList';
-import CreateProduct from '@/screens/CreateProduct';
-import ProductDetail from '@/screens/ProductDetail';
-import CartScreen from '@/screens/CartScreen';
-import MyProductsScreen from '@/screens/MyProduct';
+import ProductsList from '@/screens/Product/ProductsList';
+import CreateProduct from '@/screens/Product/CreateProduct';
+import ProductDetail from '@/screens/Product/ProductDetail';
+import CartScreen from '@/screens/Cart/CartScreen';
+import MyProductsScreen from '@/screens/Product/MyProduct';
+import PackageScreen from '@/screens/PackagePost/PackageScreen';
+import MyPackageScreen from '@/screens/PackagePost/MyPackage';
 const Stack = createStackNavigator<RootStackParamList>();
 
 
@@ -136,6 +138,8 @@ export default function Navigation() {
           <Stack.Screen name="ProductDetail" component={ProductDetail} options={{ headerShown: false }}  />
           <Stack.Screen name="MyProduct" component={MyProductsScreen} options={{ headerShown: false }}  />
           <Stack.Screen name="ChatScreen" component={ChatScreen} options={{ headerShown: false, title: 'Tư vấn' }}  />
+          <Stack.Screen name="PackageScreen" component={PackageScreen} options={{ headerShown: true, title: 'List Package Post' }}  />
+          <Stack.Screen name="MyPackageScreen" component={MyPackageScreen} options={{ headerShown: true, title: 'My Package' }}  />
         </Stack.Navigator>
     </NavigationContainer>
   );
