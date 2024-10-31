@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, Button, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { useNavigation } from '@/hooks/useNavigation'; // Giả sử bạn có hook này
 import { RootStackParamList } from '@/layouts/types/navigationTypes';
@@ -21,7 +21,9 @@ const OrderConfirmationScreen: React.FC<Props> = ({ route }) => {
 
   const handleConfirm = () => {
     alert('Thank you for your purchase!');
-    navigation.navigate('HomeScreen'); // Điều hướng tới màn hình chính sau khi xác nhận
+    navigation.navigate("Main", {
+      screen: "Home"
+    });
   };
 
   return (
@@ -43,6 +45,12 @@ const OrderConfirmationScreen: React.FC<Props> = ({ route }) => {
           </View>
         ))}
       </ScrollView>
+
+      <TouchableOpacity style={styles.goHomeBtnGroup}>
+        <View style={styles.goHomeBtn}>
+          <Button title="Go to Home" onPress={handleConfirm} />
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -101,6 +109,12 @@ const styles = StyleSheet.create({
   },
   quantityText: {
     fontSize: 16,
+  },
+  goHomeBtnGroup: {
+    marginTop: 20,
+  },
+  goHomeBtn: {
+    padding: 20,
   },
 });
 
