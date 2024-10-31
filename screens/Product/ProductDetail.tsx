@@ -49,8 +49,32 @@ const ProductDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isReportModalVisible, setIsReportModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
 
   const { addToCart } = useCart();
+
+  const checkPurchaseAndReview = async () => {
+    try {
+      // Kiểm tra các sản phẩm đã mua
+      const response = await axiosInstance.get(`/products/${userId}/listProductIdBought`);
+      const purchasedProductIds = response.data;
+
+      console.log("Purchased: ", response.data);
+      
+  
+      // Kiểm tra xem sản phẩm hiện tại có trong danh sách đã mua không
+      setHasPurchased(purchasedProductIds.includes(route.params.productId));
+  
+      // Kiểm tra xem người dùng đã review sản phẩm này chưa
+      const hasUserReviewed = product?.reviews.some(
+        (review) => review.user._id === userId
+      ) ?? false;
+      setHasReviewed(hasUserReviewed);
+    } catch (error) {
+      console.error('Failed to check purchase and review status:', error);
+    }
+  };
 
   const handleReport = async (reason: string, description: string) => {
     if (!product) return;
@@ -93,6 +117,12 @@ const ProductDetail = () => {
   useEffect(() => {
     fetchProductDetails();
   }, [route.params.productId]);
+
+  useEffect(() => {
+    if (product && userId) {
+      checkPurchaseAndReview();
+    }
+  }, [product, userId]);
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -247,7 +277,7 @@ const ProductDetail = () => {
             </View>
           </TouchableOpacity>
           {/* Review Form - Only show if user is not the owner */}
-          {userId !== product.owner._id && (
+          {userId !== product.owner && hasPurchased && !hasReviewed &&(
             <View style={styles.reviewForm}>
               <Text style={styles.sectionTitle}>Write a Review</Text>
               <StarRating rating={userRating} onRatingChange={setUserRating} />

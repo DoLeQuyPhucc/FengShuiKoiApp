@@ -101,7 +101,7 @@ const HomeScreen = () => {
         ...koiFishes,
         {
           id: Math.random().toString(),
-          color: colorHex,
+          color: colorInfo.displayName,
           displayName: colorInfo.displayName
         }
       ]);
@@ -275,7 +275,7 @@ const HomeScreen = () => {
               onClose={() => removeKoiFish(fish.id)}
               style={styles.koiChip}
             >
-              {fish.color} Koi
+              {fish.color}
             </Chip>
           ))}
           <Button
@@ -336,36 +336,62 @@ const HomeScreen = () => {
         <Dialog visible={showColorDialog} onDismiss={() => setShowColorDialog(false)}>
           <Dialog.Title>Select Koi Color</Dialog.Title>
           <Dialog.Content>
-            <RadioButton.Group onValueChange={value => addKoiFish(value)} value="">
-              {koiColors.map((color) => (
-                <RadioButton.Item
-                  key={color.hexCode}
-                  label={color.displayName}
-                  value={color.hexCode}
+          <RadioButton.Group onValueChange={value => addKoiFish(value)} value="">
+            {koiColors.map((color) => (
+              <View 
+                key={color.hexCode}
+                style={{
+                  backgroundColor: 'transparent',
+                  marginVertical: 4,
+                  borderRadius: 8,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <View 
                   style={{
-                    backgroundColor: color.hexCode,
-                    marginVertical: 4,
-                    borderRadius: 8
+                    backgroundColor: color.hexCode, 
+                    padding: 10, 
+                    borderRadius: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1,
+                    marginRight: 10
                   }}
-                  labelStyle={{
-                    color: isColorDark(color.hexCode) ? '#FFFFFF' : '#000000'
-                  }}
+                >
+                  <Text 
+                    style={{
+                      color: isColorDark(color.hexCode) ? '#FFFFFF' : '#000000',
+                      marginLeft: 10,
+                      flex: 1
+                    }}
+                  >
+                    {color.displayName}
+                  </Text>
+                </View>
+                <RadioButton 
+                  value={color.hexCode} 
+                  color={isColorDark(color.hexCode) ? '#FFFFFF' : '#000000'}
                 />
-              ))}
-            </RadioButton.Group>
-          </Dialog.Content>
+              </View>
+            ))}
+          </RadioButton.Group>
+        </Dialog.Content>
         </Dialog>
       </Portal>
     </ScrollView>
   );
 
   const isColorDark = (hexColor: string): boolean => {
-    const r = parseInt(hexColor.slice(1, 3), 16);
-    const g = parseInt(hexColor.slice(3, 5), 16);
-    const b = parseInt(hexColor.slice(5, 7), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness < 128;
+    const r = parseInt(hexColor.substring(1, 3), 16);
+    const g = parseInt(hexColor.substring(3, 5), 16);
+    const b = parseInt(hexColor.substring(5, 7), 16);
+    // Standard formula for luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5; // Return true if dark
   };
+  
 
   const renderScene = ({ route }: { route: { key: string } }) => {
     switch (route.key) {

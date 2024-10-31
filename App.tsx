@@ -6,6 +6,10 @@ import Toast from "react-native-toast-message";
 import { SocketProvider } from "./context/SocketContext";
 import { FavoriteProvider } from "./context/FavouriteBlogContext";
 import { CartProvider } from "./context/CartContext";
+import { StripeProvider } from "@stripe/stripe-react-native";
+
+const STRIPE_KEY =
+  'pk_test_51QG1BCFZYtuiwMkRanQqBx1ybBgNqkztXRBPBda7ETS0kE5o5rJmnzxx94u3EZg8GMlLOXMBZK7K23P9zlZKDVXo00gWFlfPc0';
 
 export default function App() {
   let [fontsLoaded] = useFonts(fonts);
@@ -15,6 +19,7 @@ export default function App() {
   }
   return (
     <>
+    <StripeProvider publishableKey={STRIPE_KEY}>
       <SocketProvider>
         <CartProvider>
           <FavoriteProvider>
@@ -23,6 +28,7 @@ export default function App() {
           </FavoriteProvider>
         </CartProvider>
       </SocketProvider>
+    </StripeProvider>
     </>
   );
 }

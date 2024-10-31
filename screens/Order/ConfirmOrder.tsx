@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
-import { useNavigation } from '@/hooks/useNavigation'; // Giả sử bạn có hook này
+import { useNavigation } from '@/hooks/useNavigation';
 import { RootStackParamList } from '@/layouts/types/navigationTypes';
 import { Order } from '@/shared/Interface/Order';
 
@@ -20,7 +20,6 @@ const OrderConfirmationScreen: React.FC<Props> = ({ route }) => {
   const { items, totalPrice, address, comment, isSelled } = route.params.order as Order;
 
   const handleConfirm = () => {
-    alert('Thank you for your purchase!');
     navigation.navigate("Main", {
       screen: "Home"
     });
@@ -45,6 +44,9 @@ const OrderConfirmationScreen: React.FC<Props> = ({ route }) => {
           </View>
         ))}
       </ScrollView>
+
+      {/* Thêm dòng text cảm ơn */}
+      <Text style={styles.thankYouText}>Cảm ơn bạn đã mua hàng!</Text>
 
       <TouchableOpacity style={styles.goHomeBtnGroup}>
         <View style={styles.goHomeBtn}>
@@ -115,6 +117,13 @@ const styles = StyleSheet.create({
   },
   goHomeBtn: {
     padding: 20,
+  },
+  thankYouText: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginVertical: 20,
+    color: 'green',
   },
 });
 
