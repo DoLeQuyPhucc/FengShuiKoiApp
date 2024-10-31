@@ -1,33 +1,88 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ImageBackground,
   Dimensions,
   TouchableOpacity,
   Alert,
-  Modal,
+  ScrollView,
+  SafeAreaView,
   Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import {
+  Text,
+  Provider as PaperProvider,
+  Surface,
+  TextInput,
+  Button,
+  Dialog,
+  Portal,
+  RadioButton,
+  List,
+  Chip,
+  useTheme,
+} from 'react-native-paper';
+import { TabView, TabBar } from 'react-native-tab-view';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import LinearGradient from 'react-native-linear-gradient';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Colors from '@/constants/Colors';
-import { RootStackParamList } from '@/layouts/types/navigationTypes';
-import ResultModal from '@/components/modal/ResultModal';
+import axiosInstance from '@/api/axiosInstance';
+import BasicRouteModal from '@/components/modal/BasicRoute';
+import AdvancedRouteModal from '@/components/modal/AdvancedRoute';
+interface KoiFish {
+  id: string;
+  color: string;
+  displayName: string;
+}
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeScreen'>;
+const directions = [
+  'Đông',
+  'Tây',
+  'Nam',
+  'Bắc',
+  'Tây Nam',
+  'Đông Nam',
+  'Tây Bắc',
+  'Đông Bắc',
+];
 
-function HomeScreen() {
+const koiColors = [
+  { displayName: 'Xanh lá', hexCode: '#008000' },
+  { displayName: 'Red', hexCode: '#FF0000' },
+  { displayName: 'Hồng', hexCode: '#FF69B4' },
+  { displayName: 'Cam', hexCode: '#FFA500' },
+  { displayName: 'Trắng', hexCode: '#FFFFFF' },
+  { displayName: 'Đen', hexCode: '#000000' },
+  { displayName: 'Xanh dương', hexCode: '#0000FF' },
+  { displayName: 'Vàng', hexCode: '#FFFF00' },
+  { displayName: 'Xám', hexCode: '#D3D3D3' },
+  { displayName: 'Vàng cam', hexCode: '#FFD700' },
+  { displayName: 'Tím', hexCode: '#800080' },
+];
+
+const HomeScreen = () => {
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: 'basic', title: 'Basic' },
+    { key: 'advanced', title: 'Advanced' },
+  ]);
+
+  // Shared state between tabs
   const [date, setDate] = useState(new Date());
+  const [sex, setSex] = useState<'male' | 'female' | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [fadeAnim] = useState(new Animated.Value(0)); 
+  const [showBasicRouteModal, setShowBasicRouteModal] = useState(false);
+  const [showAdvancedRouteRouteModal, setShowAdvancedRouteRouteModal] = useState(false);
+  const [data, setData] = useState<any>(null);
 
-  const navigation = useNavigation<HomeScreenNavigationProp>();
+  // Advanced tab state
+  const [koiFishes, setKoiFishes] = useState<KoiFish[]>([]);
+  const [selectedDirection, setSelectedDirection] = useState<string>('');
+  const [showDirectionDialog, setShowDirectionDialog] = useState(false);
+  const [showColorDialog, setShowColorDialog] = useState(false);
+  const [numberOfFish, setNumberOfFish] = useState<string>('');
+  const [showNumberDialog, setShowNumberDialog] = useState(false);
 
   const handleDateChange = (selectedDate?: Date) => {
     const currentDate = selectedDate || date;
@@ -35,72 +90,345 @@ function HomeScreen() {
     setDate(currentDate);
   };
 
-  const validateDate = () => {
+  const handleSexChange = (selectedSex: 'male' | 'female') => {
+    setSex(selectedSex);
+  };
+
+  const addKoiFish = (colorHex: string) => {
+    const colorInfo = koiColors.find(c => c.hexCode === colorHex);
+    if (colorInfo) {
+      setKoiFishes([
+        ...koiFishes,
+        {
+          id: Math.random().toString(),
+          color: colorHex,
+          displayName: colorInfo.displayName
+        }
+      ]);
+    }
+    setShowColorDialog(false);
+  };
+
+  const removeKoiFish = (id: string) => {
+    setKoiFishes(koiFishes.filter(fish => fish.id !== id));
+  };
+
+  const validateBasicInfo = () => {
     const year = date.getFullYear();
     if (year <= 1900) {
       Alert.alert('Invalid Date', 'Please enter a valid date.');
       return false;
     }
 
+    if (!sex) {
+      Alert.alert('Select Sex', 'Please select your sex.');
+      return false;
+    }
+
     return true;
   };
 
-  const handleResult = () => {
-    if (validateDate()) {
-      setShowModal(true);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
+  const validateAdvancedInfo = () => {
+    if (!validateBasicInfo()) return false;
+    
+    if (!selectedDirection) {
+      Alert.alert('Select Direction', 'Please select a pond direction.');
+      return false;
+    }
+
+    if (!numberOfFish || parseInt(numberOfFish) <= 0) {
+      Alert.alert('Invalid Number', 'Please enter a valid number of fish.');
+      return false;
+    }
+
+    if (koiFishes.length === 0) {
+      Alert.alert('No Koi Fish', 'Please add at least one koi fish.');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleResult = async (isAdvanced: boolean = false) => {
+    const isValid = isAdvanced ? validateAdvancedInfo() : validateBasicInfo();
+    
+    if (isValid) {
+      try {
+        const formattedDate = date.toISOString().split('T')[0];
+        
+        if (isAdvanced) {
+          const response = await axiosInstance.post('/consultation/recommend', {
+            date: formattedDate,
+            sex,
+            numberOfFish: parseInt(numberOfFish),
+            listColors: koiFishes.map(fish => fish.color),
+            direction: selectedDirection
+          });
+          setData(response.data);
+          setShowAdvancedRouteRouteModal(true);
+        } else {
+          const response = await axiosInstance.get(`/consultation/${formattedDate}&${sex}`);
+          setData(response.data);
+          setShowBasicRouteModal(true);
+        }
+      } catch (error: any) {
+        console.error('Error fetching data:', error);
+        Alert.alert('Error', 'Failed to fetch data. Please try again later.');
+      }
+    }
+  };
+
+  const renderBasicTab = () => (
+    <ScrollView contentContainerStyle={styles.tabContent}>
+      <View style={styles.formContainer}>
+        <Text style={styles.label}>Enter your date of birth</Text>
+        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
+          <Text style={styles.dateButtonText}>{date.toDateString()}</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.label}>Select your sex</Text>
+        <View style={styles.sexButtonsContainer}>
+          <TouchableOpacity
+            style={[styles.sexButton, sex === 'male' ? styles.selectedSexButton : null]}
+            onPress={() => handleSexChange('male')}
+          >
+            <MaterialIcons name="male" size={24} color={sex === 'male' ? Colors.darkBlue : Colors.darkBlueText} />
+            <Text style={[styles.sexButtonText, sex === 'male' ? styles.selectedSexButtonText : null]}>
+              Male
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sexButton, sex === 'female' ? styles.selectedSexButton : null]}
+            onPress={() => handleSexChange('female')}
+          >
+            <MaterialIcons name="female" size={24} color={sex === 'female' ? Colors.pink : Colors.darkBlueText} />
+            <Text style={[styles.sexButtonText, sex === 'female' ? styles.selectedSexButtonText : null]}>
+              Female
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Button
+          mode="contained"
+          style={styles.resultButton}
+          onPress={() => handleResult(false)}
+        >
+          Get Basic Result
+        </Button>
+      </View>
+    </ScrollView>
+  );
+
+  const renderAdvancedTab = () => (
+    <ScrollView contentContainerStyle={styles.tabContent}>
+      <Surface style={styles.formContainer}>
+        <Text style={styles.label}>Enter your date of birth</Text>
+        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
+          <Text style={styles.dateButtonText}>{date.toDateString()}</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.label}>Select your sex</Text>
+        <View style={styles.sexButtonsContainer}>
+          <TouchableOpacity
+            style={[styles.sexButton, sex === 'male' ? styles.selectedSexButton : null]}
+            onPress={() => handleSexChange('male')}
+          >
+            <MaterialIcons name="male" size={24} color={sex === 'male' ? Colors.darkBlue : Colors.darkBlueText} />
+            <Text style={[styles.sexButtonText, sex === 'male' ? styles.selectedSexButtonText : null]}>
+              Male
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sexButton, sex === 'female' ? styles.selectedSexButton : null]}
+            onPress={() => handleSexChange('female')}
+          >
+            <MaterialIcons name="female" size={24} color={sex === 'female' ? Colors.pink : Colors.darkBlueText} />
+            <Text style={[styles.sexButtonText, sex === 'female' ? styles.selectedSexButtonText : null]}>
+              Female
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.label}>Number of Fish</Text>
+        <Button
+          mode="outlined"
+          onPress={() => setShowNumberDialog(true)}
+          style={styles.directionButton}
+        >
+          {numberOfFish ? `${numberOfFish} Fish` : 'Select Number of Fish'}
+        </Button>
+
+        <Text style={styles.label}>Pond Direction</Text>
+        <Button
+          mode="outlined"
+          onPress={() => setShowDirectionDialog(true)}
+          style={styles.directionButton}
+        >
+          {selectedDirection || 'Select Direction'}
+        </Button>
+
+        <Text style={styles.label}>Koi Fish Configuration</Text>
+        <View style={styles.koiContainer}>
+          {koiFishes.map((fish) => (
+            <Chip
+              key={fish.id}
+              onClose={() => removeKoiFish(fish.id)}
+              style={styles.koiChip}
+            >
+              {fish.color} Koi
+            </Chip>
+          ))}
+          <Button
+            mode="outlined"
+            onPress={() => setShowColorDialog(true)}
+            style={styles.addKoiButton}
+          >
+            Add Koi Fish Color
+          </Button>
+        </View>
+
+        <Button
+          mode="contained"
+          style={styles.resultButton}
+          onPress={() => handleResult(true)}
+        >
+          Get Advanced Result
+        </Button>
+      </Surface>
+
+      <Portal>
+        <Dialog visible={showDirectionDialog} onDismiss={() => setShowDirectionDialog(false)}>
+          <Dialog.Title>Select Pond Direction</Dialog.Title>
+          <Dialog.Content>
+            <RadioButton.Group onValueChange={value => {
+              setSelectedDirection(value);
+              setShowDirectionDialog(false);
+            }} value={selectedDirection}>
+              {directions.map((direction) => (
+                <RadioButton.Item key={direction} label={direction} value={direction} />
+              ))}
+            </RadioButton.Group>
+          </Dialog.Content>
+        </Dialog>
+
+        <Dialog visible={showNumberDialog} onDismiss={() => setShowNumberDialog(false)}>
+          <Dialog.Title>Enter Number of Fish</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              keyboardType="numeric"
+              value={numberOfFish}
+              onChangeText={(text) => {
+                // Only allow positive numbers
+                if (/^\d*$/.test(text)) {
+                  setNumberOfFish(text);
+                }
+              }}
+              style={styles.numberInput}
+              mode='outlined'
+              placeholder="Enter number of fish"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowNumberDialog(false)}>Done</Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        <Dialog visible={showColorDialog} onDismiss={() => setShowColorDialog(false)}>
+          <Dialog.Title>Select Koi Color</Dialog.Title>
+          <Dialog.Content>
+            <RadioButton.Group onValueChange={value => addKoiFish(value)} value="">
+              {koiColors.map((color) => (
+                <RadioButton.Item
+                  key={color.hexCode}
+                  label={color.displayName}
+                  value={color.hexCode}
+                  style={{
+                    backgroundColor: color.hexCode,
+                    marginVertical: 4,
+                    borderRadius: 8
+                  }}
+                  labelStyle={{
+                    color: isColorDark(color.hexCode) ? '#FFFFFF' : '#000000'
+                  }}
+                />
+              ))}
+            </RadioButton.Group>
+          </Dialog.Content>
+        </Dialog>
+      </Portal>
+    </ScrollView>
+  );
+
+  const isColorDark = (hexColor: string): boolean => {
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness < 128;
+  };
+
+  const renderScene = ({ route }: { route: { key: string } }) => {
+    switch (route.key) {
+      case 'basic':
+        return renderBasicTab();
+      case 'advanced':
+        return renderAdvancedTab();
+      default:
+        return null;
     }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ImageBackground
-        source={require('../assets/images/fishkoi.webp')}
-        style={styles.background}
-        imageStyle={styles.image}
-      >
-        <View style={styles.titleContainer}>
-          <Text style={[styles.title, { color: Colors.lightGreen }]}>FengShuiKoi</Text>
-        </View>
+    <PaperProvider>
+      <SafeAreaView style={styles.safeArea}>
+        <ImageBackground
+          source={require('../assets/images/fishkoi.webp')}
+          style={styles.background}
+          imageStyle={styles.backgroundImage}
+        >
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>FengShuiKoi</Text>
+          </View>
 
-        <View style={styles.formContainer}>
-          <Text style={[styles.label, { color: Colors.lightGreen, fontWeight: 'bold' }]}>
-            Nhập ngày sinh của bạn
-          </Text>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
-            <Text style={styles.dateButtonText}>{date.toDateString()}</Text>
-          </TouchableOpacity>
+          <TabView
+            navigationState={{ index, routes }}
+            renderScene={renderScene}
+            onIndexChange={setIndex}
+            renderTabBar={props => (
+              <TabBar
+                {...props}
+                style={styles.tabBar}
+                labelStyle={styles.tabLabel}
+                indicatorStyle={styles.tabIndicator}
+              />
+            )}
+          />
+
           <DateTimePickerModal
             isVisible={showDatePicker}
             mode="date"
             onConfirm={handleDateChange}
             onCancel={() => setShowDatePicker(false)}
           />
-          <TouchableOpacity style={styles.resultButton} onPress={handleResult}>
-            <Text style={styles.buttonText}>Kết quả của bạn </Text>
-          </TouchableOpacity>
-        </View>
-      </ImageBackground>
 
-      <Modal
-        visible={showModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <Animated.View style={[styles.modalContent, { opacity: fadeAnim }]}>
-            <ResultModal date={date.toISOString().split('T')[0]} onClose={() => setShowModal(false)} />
-          </Animated.View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+          <BasicRouteModal
+            visible={showBasicRouteModal}
+            onClose={() => setShowBasicRouteModal(false)}
+            fadeAnim={new Animated.Value(1)}
+            data={data}
+          />
+
+          <AdvancedRouteModal
+            visible={showAdvancedRouteRouteModal}
+            onClose={() => setShowAdvancedRouteRouteModal(false)}
+            fadeAnim={new Animated.Value(1)}
+            data={data}
+          />
+        </ImageBackground>
+      </SafeAreaView>
+    </PaperProvider>
   );
-}
+};
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -108,41 +436,54 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
   },
-  image: {
+  backgroundImage: {
     resizeMode: 'cover',
   },
-  formContainer: {
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 10,
-    marginHorizontal: 30, // Add margin to both sides
-  },
   titleContainer: {
-    position: 'absolute',
-    top: 50,
-    left: 0,
-    right: 0,
     alignItems: 'center',
+    paddingTop: 50,
+    paddingBottom: 20,
   },
   title: {
     fontSize: 42,
     fontWeight: 'bold',
-    color: Colors.darkBlueText,
+    color: Colors.lightGreen,
     textShadowColor: 'rgba(0, 0, 0, 0.7)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 10,
   },
-  label: {
-    fontSize: 18,
+  tabBar: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  tabLabel: {
     color: Colors.darkBlueText,
+    fontWeight: 'bold',
+  },
+  tabIndicator: {
+    backgroundColor: Colors.lightGreen,
+  },
+  tabContent: {
+    flexGrow: 1,
+    paddingVertical: 20,
+  },
+  formContainer: {
+    margin: 20,
+    padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 10,
+    elevation: 4,
+  },
+  label: {
+    fontSize: 16,
     marginTop: 10,
     marginBottom: 10,
+    color: Colors.darkBlueText,
+    fontWeight: 'bold',
   },
   dateButton: {
     backgroundColor: Colors.lightGreen,
@@ -150,60 +491,60 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 15,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 3,
+    alignItems: 'center',
   },
   dateButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
   },
-  pickerContainer: {
+  sexButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  sexButton: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 10,
-    marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    marginHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
     elevation: 2,
-    width: '100%', 
   },
-  dateTimePicker: {
-    width: '200%', 
+  selectedSexButton: {
+    backgroundColor: Colors.lightGreen,
+  },
+  sexButtonText: {
+    color: Colors.darkBlueText,
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  selectedSexButtonText: {
+    color: '#FFFFFF',
+  },
+  directionButton: {
+    marginBottom: 20,
+  },
+  koiContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 20,
+  },
+  koiChip: {
+    margin: 4,
+  },
+  addKoiButton: {
+    marginTop: 8,
   },
   resultButton: {
-    backgroundColor: Colors.lightGreen,
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 25,
     marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: Colors.lightGreen,
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '90%',
-    height: '80%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    overflow: 'hidden',
+  numberInput: {
+    backgroundColor: 'transparent',
+    marginTop: 8,
   },
 });
 
