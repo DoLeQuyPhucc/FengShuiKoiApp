@@ -1,5 +1,5 @@
 import { CartItem } from "@/context/CartContext";
-import { Product } from "@/screens/Product/ProductsList";
+import { Owner, Product } from "@/screens/Product/ProductsList";
 import { Blog } from "@/shared/Interface/Blog";
 import { Order } from "@/shared/Interface/Order";
 
@@ -33,6 +33,7 @@ export type RootStackParamList = {
   OrderConfirmationScreen: { order: Order };
   CreateProduct: { product: Product } | undefined;
   ProductDetail: { productId: string };
+  UserProductsScreen: { owner: Owner };
   MyProduct: undefined;
   ChatScreen: undefined;
   PackageScreen: undefined;

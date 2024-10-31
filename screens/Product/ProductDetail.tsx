@@ -106,6 +106,8 @@ const ProductDetail = () => {
         ...response.data,
         reviews: reviewsResponse.data
       });
+
+      console.log('Product details:', response.data);
     } catch (error) {
       console.error('Failed to fetch product details:', error);
       Alert.alert('Error', 'Failed to load product details');
@@ -141,6 +143,12 @@ const ProductDetail = () => {
       Alert.alert('Error', error.response?.data?.message || 'Failed to submit review');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleNavigateToUserProducts = () => {
+    if (product) {
+      navigation.navigate('UserProductsScreen', { owner: product.owner });
     }
   };
 
@@ -189,6 +197,8 @@ const ProductDetail = () => {
     );
   }
 
+  const placeholderAvatar = 'https://wallpaperaccess.com/full/6999296.jpg';
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
@@ -198,7 +208,7 @@ const ProductDetail = () => {
           </TouchableOpacity>
           
           {/* Thêm nút Report */}
-          {userId !== product?.owner && (
+          {userId !== product?.owner._id && (
             <TouchableOpacity 
               style={styles.reportButton}
               onPress={() => setIsReportModalVisible(true)}
@@ -215,6 +225,8 @@ const ProductDetail = () => {
         />
         
         <View style={styles.contentContainer}>
+         
+
           <Text style={styles.productName}>{product.name}</Text>
           <Text style={styles.productPrice}>${product.price.toLocaleString()}</Text>
           
@@ -227,9 +239,15 @@ const ProductDetail = () => {
 
           <Text style={styles.sectionTitle}>Description</Text>
           <Text style={styles.description}>{product.description}</Text>
-
+          <TouchableOpacity style={styles.userInfoContainer} onPress={handleNavigateToUserProducts}>
+            <Image source={{ uri: placeholderAvatar }} style={styles.avatar} />
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{product.owner.name}</Text>
+              <Text style={styles.userEmail}>{product.owner.email}</Text>
+            </View>
+          </TouchableOpacity>
           {/* Review Form - Only show if user is not the owner */}
-          {userId !== product.owner && (
+          {userId !== product.owner._id && (
             <View style={styles.reviewForm}>
               <Text style={styles.sectionTitle}>Write a Review</Text>
               <StarRating rating={userRating} onRatingChange={setUserRating} />
@@ -317,6 +335,38 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
+  },
+  userInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    padding: 8,
+    backgroundColor: '#fff',
+    // borderRadius: 8,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.1,
+    shadowRadius: 4,
+    borderTopWidth: 0.5,
+    borderBottomWidth: 0.5,
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#666',
   },
   productName: {
     fontSize: 24,
@@ -459,6 +509,18 @@ const styles = StyleSheet.create({
   },
   cartIcon: {
     marginRight: 4,
+  },
+  userProductsButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  userProductsButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
