@@ -3,8 +3,10 @@ import { Order } from '@/shared/Interface/Order';
 import { Product } from '@/shared/Interface/Product';
 import { RouteProp } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, SafeAreaView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, SafeAreaView, Image, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from "@/hooks/useNavigation";
+import axiosInstance from '@/api/axiosInstance';
+import useUserId from '@/hooks/useAuth';
 
 type CheckoutScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -21,10 +23,25 @@ const CheckoutScreen: React.FC<Props> = ({ route }) => {
 
   const items = route.params.items;
   
+  const userId = useUserId();
+
   const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
+  
+  const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const totalAmount = items.reduce((total, item) => total + item.price, 0);
+  const checkoutOrder = async (order: Order): Promise<void> => {
+    try {
+      const response = items.map(async (item) => {
+        await axiosInstance.get<Product[]>(`/products/checkout/${userId}&${item.productId}`);
+      });
+      if (response) {
+        navigation.navigate('OrderConfirmationScreen', { order })
+      }
+    } catch (error: any) {
+      console.error('Error fetching products:', error);
+    }
+  };
 
   const handleCheckout = () => {
     if (!address) {
@@ -40,7 +57,16 @@ const CheckoutScreen: React.FC<Props> = ({ route }) => {
         isSelled: true
       };
 
-    navigation.navigate('OrderConfirmationScreen', { order });
+      Alert.alert(
+        'Confirmation',
+        'Do you want to confirm this order?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Yes', onPress: () =>  checkoutOrder(order) }
+        ]
+      );
+
+   
 
     // console.log("Order Confirmed", {
     //   name: product.name,
