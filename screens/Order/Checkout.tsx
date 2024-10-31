@@ -7,6 +7,9 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView, SafeAreaView, Im
 import { useNavigation } from "@/hooks/useNavigation";
 import axiosInstance from '@/api/axiosInstance';
 import useUserId from '@/hooks/useAuth';
+import { useStripe } from '@stripe/stripe-react-native';
+import { PaymentService } from './PaymentService';
+import { useCart } from '@/context/CartContext';
 
 type CheckoutScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -19,64 +22,115 @@ type Props = {
 
 const CheckoutScreen: React.FC<Props> = ({ route }) => {
 
+  const stripe = useStripe();
+
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+
   const navigation = useNavigation();
 
   const items = route.params.items;
   
   const userId = useUserId();
 
+  const { clearCart } = useCart();
+
+  const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
   
   const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const checkoutOrder = async (order: Order): Promise<void> => {
+    const checkoutOrder = async (order: Order): Promise<void> => {
+    console.log('checkoutOrder started'); // Log khi hàm bắt đầu
     try {
-      const response = items.map(async (item) => {
-        await axiosInstance.get<Product[]>(`/products/checkout/${userId}&${item.productId}`);
-      });
-      if (response) {
-        navigation.navigate('OrderConfirmationScreen', { order })
+      const response = await Promise.all(items.map(async (item) => {
+        return await axiosInstance.get<Product[]>(`/products/checkout/${userId}&${item.productId}`);
+      }));
+      const allSuccessful = response.every(response => response.status === 200);
+
+      if (allSuccessful) {
+        console.log('checkoutOrder successful');
+        clearCart();
+        navigation.navigate('OrderConfirmationScreen', { order });
+      } else {
+        console.error('One or more requests failed');
       }
     } catch (error: any) {
       console.error('Error fetching products:', error);
+    } finally {
+      console.log('checkoutOrder ended');
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!address) {
-      alert('Vui lòng nhập địa chỉ giao hàng!');
+      Alert.alert('Error', 'Please enter your shipping address');
       return;
     }
-
-    const order: Order = {
-        items: items,
-        totalPrice: totalAmount,
-        address,
-        comment,
-        isSelled: true
-      };
-
-      Alert.alert(
-        'Confirmation',
-        'Do you want to confirm this order?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Yes', onPress: () =>  checkoutOrder(order) }
-        ]
-      );
-
-   
-
-    // console.log("Order Confirmed", {
-    //   name: product.name,
-    //   price: product.price,
-    //   quantity: product.quantity,
-    //   address,
-    //   comment,
-    //   isSelled: true
-    // });
+  
+    Alert.alert(
+      'Confirmation',
+      'Do you want to proceed with payment?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Yes', 
+          onPress: async () => {
+            try {
+              setLoading(true);
+              
+              // Step 1: Tạo payment intent
+              const clientSecret = await PaymentService.createPaymentIntent(totalAmount);
+  
+              // Step 2: Khởi tạo Payment sheet
+              const initResponse = await stripe.initPaymentSheet({
+                merchantDisplayName: "notJust.dev",
+                paymentIntentClientSecret: clientSecret,
+              });
+  
+              if (initResponse.error) {
+                console.log(initResponse.error);
+                Alert.alert("Something went wrong");
+                setLoading(false);
+                return;
+              }
+  
+              // Step 3: Hiển thị Payment sheet và xử lý thanh toán
+              const paymentResponse = await stripe.presentPaymentSheet();
+  
+              if (paymentResponse.error) {
+                Alert.alert(
+                  `Error code: ${paymentResponse.error.code}`,
+                  paymentResponse.error.message
+                );
+                setLoading(false);
+                return;
+              }
+  
+              // Nếu thanh toán thành công, tạo đối tượng order và gọi checkoutOrder
+              const order: Order = {
+                items: items,
+                totalPrice: totalAmount,
+                address,
+                comment,
+                isSelled: true
+              };
+              
+              // Gọi hàm checkoutOrder
+              await checkoutOrder(order);
+  
+            } catch (error) {
+              console.error('Payment error:', error);
+              Alert.alert('Error', 'Payment failed. Please try again.');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
   };
+  
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -115,8 +169,17 @@ const CheckoutScreen: React.FC<Props> = ({ route }) => {
           <Text style={styles.totalAmount}>${totalAmount.toLocaleString()}</Text>
         </View>
         
-        <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-          <Text style={styles.checkoutButtonText}>Confirm!</Text>
+        <TouchableOpacity 
+          style={[
+            styles.checkoutButton,
+            loading && styles.disabledButton
+          ]} 
+          onPress={handleCheckout}
+          disabled={loading}
+        >
+          <Text style={styles.checkoutButtonText}>
+            {loading ? 'Processing...' : 'Pay Now'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -256,6 +319,10 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 5,
   },
+  disabledButton: {
+    opacity: 0.7,
+    backgroundColor: '#cccccc'
+  }
 });
 
 export default CheckoutScreen;
