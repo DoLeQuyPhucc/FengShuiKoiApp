@@ -277,7 +277,7 @@ const ProductDetail = () => {
             </View>
           </TouchableOpacity>
           {/* Review Form - Only show if user is not the owner */}
-          {userId !== product.owner && hasPurchased && !hasReviewed &&(
+          {userId !== product.owner._id && hasPurchased && !hasReviewed &&(
             <View style={styles.reviewForm}>
               <Text style={styles.sectionTitle}>Write a Review</Text>
               <StarRating rating={userRating} onRatingChange={setUserRating} />
