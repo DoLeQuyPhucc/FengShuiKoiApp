@@ -17,13 +17,20 @@ import { useCart } from '@/context/CartContext';
 import Colors from '@/constants/Colors';
 import { useFocusEffect } from '@react-navigation/native';
 
+export interface Owner {
+  _id: string;
+  name: string;
+  email: string;
+  avatar: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
   description: string;
   price: number;
   image: string;
-  owner: string;
+  owner: Owner;
   isApproved: boolean;
   createdAt: string;
 }
@@ -113,7 +120,7 @@ const ProductsList = () => {
   };
 
   const showProductOptions = (product: Product) => {
-    if (product.owner === userId) {
+    if (product.owner._id === userId) {
       Alert.alert(
         'Product Options',
         '',
@@ -196,7 +203,7 @@ const ProductsList = () => {
                 </TouchableOpacity>
               </View>
             </View>
-            {product.owner === userId && (
+            {product.owner._id === userId && (
               <TouchableOpacity 
                 style={styles.optionsButton}
                 onPress={() => showProductOptions(product)}
