@@ -191,11 +191,11 @@ const ChatScreen = () => {
         }
       });
 
-      socketRef.current.on('chatEnd', async () => {
-        await AsyncStorage.removeItem('currentChatSession');
-        setChatSessionId(null);
+      socketRef.current.on('chatEnd', ({ sessionId }: { sessionId: string }) => {
+        console.log(`Chat session ${sessionId} ended`);
         setMessages([]);
-        setInQueue(false);
+        setChatSessionId(null);
+        AsyncStorage.removeItem('currentChatSession');
       });
 
       return () => {
