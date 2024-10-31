@@ -14,9 +14,11 @@ const gray = "#ECECEC";
 
 const lightBlue = "#f1f4ff";
 const commonBlue = "#47CEFF";
+const darkBlue = "#0a7ea4";
 const warmOrange = "#f39c12";
 const darkBlueText = "#133048";
 const lightGreen = "#1ABC9C";
+const pink = "#FF69B4";
 
 
 
@@ -53,4 +55,6 @@ export default {
   commonBlue: commonBlue,
   darkBlueText: darkBlueText,
   lightGreen: lightGreen,
+  pink: pink,
+  darkBlue: darkBlue
 };
